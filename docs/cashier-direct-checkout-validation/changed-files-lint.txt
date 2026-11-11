@@ -1,0 +1,1 @@
+PASS: no errors or warnings in changed frontend files.

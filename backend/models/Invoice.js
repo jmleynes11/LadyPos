@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { addStoreAttribution } from "./resourceAttribution.js";
 
 const { Schema, model } = mongoose;
 
@@ -32,6 +33,8 @@ const invoiceSchema = new Schema(
       index: true,
     },
     notes: { type: String, default: "" },
+    snapshot: Schema.Types.Mixed,
+    reversalId: Schema.Types.ObjectId,
   },
   {
     timestamps: true,
@@ -51,4 +54,5 @@ invoiceSchema.virtual("orderId").get(function getOrderId() {
 invoiceSchema.index({ owner: 1, invoiceNumber: 1 });
 invoiceSchema.index({ owner: 1, transaction: 1 });
 
+addStoreAttribution(invoiceSchema);
 export default model("Invoice", invoiceSchema);

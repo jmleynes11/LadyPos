@@ -36,7 +36,7 @@ export default function ProductCard({ product, onEdit, onDelete }) {
         <button
           onClick={onDelete}
           className="flex-1 p-2 rounded-lg text-white"
-          style={{ backgroundColor: "#ef4444" }}
+          style={{ backgroundColor: "var(--color-danger)" }}
         >
           Delete
         </button>

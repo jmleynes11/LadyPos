@@ -19,7 +19,7 @@ export const createExpense = async (req, res) => {
       createdBy: req.user.id,
     });
 
-    await expense.save();
+    await expense.save({ session: req.accountSession });
     res.json(expense);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -30,7 +30,7 @@ export const deleteExpense = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const expense = await Expense.findById(id);
+    const expense = await Expense.findById(id).session(req.accountSession || null);
 
     if (!expense) {
       return res.status(404).json({ error: "Expense not found" });
@@ -43,7 +43,7 @@ export const deleteExpense = async (req, res) => {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    await expense.deleteOne();
+    await expense.deleteOne({ session: req.accountSession });
 
     res.json({ message: "Expense deleted" });
   } catch (err) {
@@ -59,7 +59,7 @@ export const updateExpense = async (req, res) => {
       return res.status(400).json({ error: "Invalid expense ID" });
     }
 
-    const expense = await Expense.findById(id);
+    const expense = await Expense.findById(id).session(req.accountSession || null);
 
     if (!expense) {
       return res.status(404).json({ error: "Expense not found" });
@@ -81,7 +81,7 @@ export const updateExpense = async (req, res) => {
     if (note !== undefined) expense.note = note;
     if (date) expense.date = new Date(date);
 
-    await expense.save();
+    await expense.save({ session: req.accountSession });
 
     res.json(expense);
   } catch (err) {

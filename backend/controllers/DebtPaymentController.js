@@ -13,9 +13,8 @@ const method = (value) => String(value || "cash").toLowerCase();
 const allowedMethods = ["cash", "gcash", "bank", "credit"];
 
 export async function createDebtPayment(req, res) {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  console.warn("Starting Transaction");
+  const session = req.accountSession || await mongoose.startSession();
+  if (!req.accountSession) session.startTransaction();
   try {
     const owner = ownerIdFrom(req);
     const customerId = req.params.id || req.body.customer || req.body.personId;
@@ -78,7 +77,7 @@ export async function createDebtPayment(req, res) {
         { session },
       );
 
-      await session.commitTransaction();
+      if (!req.accountSession) await session.commitTransaction();
       return respond(res, 201, "Payment recorded", payment);
     }
 
@@ -125,13 +124,13 @@ export async function createDebtPayment(req, res) {
       ],
       { session },
     );
-    await session.commitTransaction();
+    if (!req.accountSession) await session.commitTransaction();
     respond(res, 201, "Payment recorded", payment);
   } catch (err) {
-    await session.abortTransaction();
+    if (!req.accountSession) await session.abortTransaction();
     respondError(res, 400, err.message);
   } finally {
-    session.endSession();
+    if (!req.accountSession) session.endSession();
   }
 }
 

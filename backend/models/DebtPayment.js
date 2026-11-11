@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Transaction from "./Order.js";
+import { addStoreAttribution } from "./resourceAttribution.js";
 
 const { Schema, model } = mongoose;
 
@@ -47,38 +47,10 @@ debtPaymentSchema.virtual("personId").get(function getPersonId() {
   return this.customer;
 });
 
-debtPaymentSchema.pre("save", async function applyPayment(next) {
-  if (!this.isNew || !this.transaction) return;
-
-  try {
-    const transaction = await Transaction.findOne({
-      _id: this.transaction,
-      owner: this.owner,
-      customer: this.customer,
-      voidedAt: { $exists: false },
-    }).session(this.$session());
-
-    if (!transaction) {
-      throw new Error("Linked transaction not found");
-    }
-
-    if (this.amountPaid > transaction.balance) {
-      throw new Error("Payment exceeds remaining balance");
-    }
-
-    transaction.amountPaid += this.amountPaid;
-    transaction.balance = Math.max(
-      0,
-      transaction.totalAmount - transaction.amountPaid,
-    );
-    await transaction.save({ session: this.$session() });
-    return;
-  } catch (err) {
-    next(err);
-  }
-});
+// Payment effects belong to DebtPaymentController's transaction, not a second save hook.
 
 debtPaymentSchema.index({ owner: 1, customer: 1, paidAt: -1 });
 debtPaymentSchema.index({ owner: 1, transaction: 1, paidAt: -1 });
 
+addStoreAttribution(debtPaymentSchema);
 export default model("DebtPayment", debtPaymentSchema);

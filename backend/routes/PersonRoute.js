@@ -1,3 +1,5 @@
+import { accountOperation } from "../middleware/accountOperation.js";
+import { requireLegacyOperationalAccess } from "../middleware/roleAdmission.js";
 import express from "express";
 import {
   createPerson,
@@ -17,15 +19,15 @@ const router = express.Router();
 
 router.use(protect);
 
-router.route("/").post(createPerson).get(getPeople);
+router.route("/").post(requireLegacyOperationalAccess, accountOperation(createPerson)).get(requireLegacyOperationalAccess, accountOperation(getPeople));
 
-router.route("/:id").get(getPersonById).put(updatePerson).delete(deletePerson);
+router.route("/:id").get(requireLegacyOperationalAccess, accountOperation(getPersonById)).put(requireLegacyOperationalAccess, accountOperation(updatePerson)).delete(requireLegacyOperationalAccess, accountOperation(deletePerson));
 
-router.post("/:id/debts", addDebt);
-router.post("/:id/payments", addPayment);
-router.post("/:id/pay-all", payAllDebts);
+router.post("/:id/debts", requireLegacyOperationalAccess, accountOperation(addDebt));
+router.post("/:id/payments", requireLegacyOperationalAccess, accountOperation(addPayment));
+router.post("/:id/pay-all", requireLegacyOperationalAccess, accountOperation(payAllDebts));
 
-router.put("/:id/debts/:debtId", updateDebt);
-router.delete("/:id/debts/:debtId", deleteDebt);
+router.put("/:id/debts/:debtId", requireLegacyOperationalAccess, accountOperation(updateDebt));
+router.delete("/:id/debts/:debtId", requireLegacyOperationalAccess, accountOperation(deleteDebt));
 
 export default router;

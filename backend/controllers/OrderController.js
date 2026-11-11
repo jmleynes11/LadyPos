@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { reverseOrderAlias } from "../services/bookstoreAliases.js";
 import Transaction from "../models/Order.js";
 import Customer from "../models/Person.js";
 import Product from "../models/Product.js";
@@ -6,6 +7,7 @@ import Invoice from "../models/Invoice.js";
 import DebtPayment from "../models/DebtPayment.js";
 import { createInvoiceForTransaction } from "./InvoiceController.js";
 import { respond, respondError } from "../utils/responseHelpers.js";
+import { redactSensitive } from "../utils/safeErrors.js";
 
 const ownerIdFrom = (req) => req.user?._id || req.user?.id;
 const pageFrom = (req) => Math.max(1, Number.parseInt(req.query.page ?? 1, 10));
@@ -18,7 +20,7 @@ const allowedMethods = ["cash", "gcash", "bank", "credit"];
 const normalizeCart = (body) => body.items || body.products || [];
 
 function logOrder(event, payload) {
-  console.log(`[orders:${event}] ${JSON.stringify(payload)}`);
+  console.log(redactSensitive(`[orders:${event}] ${JSON.stringify(payload)}`));
 }
 
 async function getOrCreateWalkInCustomer(owner, session) {
@@ -207,8 +209,8 @@ async function completeTransaction(transaction, body, processedBy, session) {
 }
 
 export async function createTransaction(req, res) {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const session = req.accountSession || await mongoose.startSession();
+  if (!req.accountSession) session.startTransaction();
 
   try {
     const owner = ownerIdFrom(req);
@@ -281,7 +283,7 @@ export async function createTransaction(req, res) {
       });
     }
 
-    await session.commitTransaction();
+    if (!req.accountSession) await session.commitTransaction();
 
     // Populate after commit — session is no longer needed
     await transaction.populate("items.product", "name sku price stock");
@@ -298,7 +300,7 @@ export async function createTransaction(req, res) {
       },
     );
   } catch (err) {
-    await session.abortTransaction();
+    if (!req.accountSession) await session.abortTransaction();
     logOrder("create-failed", {
       message: err.message,
       stack: err.stack,
@@ -306,7 +308,7 @@ export async function createTransaction(req, res) {
     });
     return respondError(res, 400, err.message);
   } finally {
-    session.endSession();
+    if (!req.accountSession) session.endSession();
   }
 }
 
@@ -317,7 +319,7 @@ export async function getTransactions(req, res) {
     const owner = ownerIdFrom(req);
     const page = pageFrom(req);
     const limit = limitFrom(req);
-    const filter = { owner, voidedAt: { $exists: false } };
+    const filter = { owner, origin: { $exists: false }, voidedAt: { $exists: false } };
 
     if (req.query.orderStatus) filter.orderStatus = req.query.orderStatus;
     if (req.query.customer) filter.customer = req.query.customer;
@@ -371,7 +373,7 @@ export const getOrders = getTransactions;
 export async function getTransactionById(req, res) {
   try {
     const owner = ownerIdFrom(req);
-    const transaction = await Transaction.findOne({ _id: req.params.id, owner })
+    const transaction = await Transaction.findOne({ _id: req.params.id, owner, origin: { $exists: false } })
       .populate("customer", "name phone email address")
       .populate("processedBy", "name email identifier")
       .populate("items.product", "name sku price");
@@ -394,8 +396,8 @@ export async function getTransactionById(req, res) {
 export const getOrderById = getTransactionById;
 
 export async function updateOrder(req, res) {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const session = req.accountSession || await mongoose.startSession();
+  if (!req.accountSession) session.startTransaction();
 
   try {
     const owner = ownerIdFrom(req);
@@ -427,7 +429,7 @@ export async function updateOrder(req, res) {
         owner,
         session,
       );
-      await session.commitTransaction();
+      if (!req.accountSession) await session.commitTransaction();
       await completed.transaction.populate("customer", "name phone");
       return respond(
         res,
@@ -472,11 +474,11 @@ export async function updateOrder(req, res) {
     transaction.notes = req.body.notes ?? transaction.notes;
     await transaction.save({ session });
 
-    await session.commitTransaction();
+    if (!req.accountSession) await session.commitTransaction();
     await transaction.populate("customer", "name phone");
     respond(res, 200, "Order saved", { transaction });
   } catch (err) {
-    await session.abortTransaction();
+    if (!req.accountSession) await session.abortTransaction();
     logOrder("update-failed", {
       orderId: req.params.id,
       owner: ownerIdFrom(req),
@@ -484,7 +486,7 @@ export async function updateOrder(req, res) {
     });
     respondError(res, 400, err.message);
   } finally {
-    session.endSession();
+    if (!req.accountSession) session.endSession();
   }
 }
 
@@ -508,7 +510,7 @@ export async function markAsPaid(req, res) {
     if (transaction.balance <= 0)
       return respond(res, 200, "Order is already paid", transaction);
 
-    req.body = {
+    const payment = {
       customer: transaction.customer,
       transaction: transaction._id,
       amountPaid: transaction.balance,
@@ -517,7 +519,8 @@ export async function markAsPaid(req, res) {
       notes: "Debt settled from order",
     };
     const { createDebtPayment } = await import("./DebtPaymentController.js");
-    return createDebtPayment(req, res);
+    // The order route ID is not a customer ID. Do not mutate the caller's request.
+    return createDebtPayment({ user: req.user, params: {}, body: payment, accountSession: req.accountSession }, res);
   } catch (err) {
     logOrder("pay-failed", { orderId: req.params.id, message: err.message });
     return respondError(res, 500, err.message);
@@ -525,49 +528,12 @@ export async function markAsPaid(req, res) {
 }
 
 export async function voidTransaction(req, res) {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
-    const owner = ownerIdFrom(req);
-    const transaction = await Transaction.findOne({
-      _id: req.params.id,
-      owner,
-      voidedAt: { $exists: false },
-    }).session(session);
-
-    if (!transaction) throw new Error("Order not found");
-
-    if (transaction.ledgerRecorded) {
-      for (const item of transaction.items) {
-        await Product.updateOne(
-          { _id: item.product, owner },
-          { $inc: { stock: item.quantity } },
-          { session },
-        );
-      }
-    }
-
-    transaction.voidedAt = new Date();
-    transaction.voidReason = req.body.reason || "Voided by user";
-    transaction.orderStatus = "void";
-    await transaction.save({ session });
-
-    await Invoice.updateOne(
-      { owner, transaction: transaction._id },
-      { $set: { status: "void" } },
-      { session },
-    );
-
-    await session.commitTransaction();
-    logOrder("order-voided", { orderId: transaction._id, owner });
-    respond(res, 200, "Order voided", transaction);
+    const result = await reverseOrderAlias(req.user, req.params.id, req.body);
+    respond(res, 200, "Reversal applied", result);
   } catch (err) {
-    await session.abortTransaction();
-    logOrder("void-failed", { orderId: req.params.id, message: err.message });
-    respondError(res, 400, err.message);
-  } finally {
-    session.endSession();
+    if (!err.statusCode || err.statusCode >= 500) throw err;
+    respondError(res, err.statusCode, err.message);
   }
 }
 

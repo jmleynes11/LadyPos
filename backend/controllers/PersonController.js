@@ -34,6 +34,7 @@ const withCustomerSummary = (owner) => [
         {
           $match: {
             owner: new mongoose.Types.ObjectId(owner),
+            origin: { $exists: false },
             orderStatus: "completed",
             voidedAt: { $exists: false },
             $expr: {
@@ -148,6 +149,7 @@ export async function getCustomerById(req, res) {
       [
         Transaction.find({
           owner,
+          origin: { $exists: false },
           customer: req.params.id,
           orderStatus: "completed",
           voidedAt: { $exists: false },
@@ -158,6 +160,7 @@ export async function getCustomerById(req, res) {
           .populate("items.product", "name sku"),
         Transaction.countDocuments({
           owner,
+          origin: { $exists: false },
           customer: req.params.id,
           orderStatus: "completed",
           voidedAt: { $exists: false },
@@ -214,13 +217,13 @@ export const getPersonById = getCustomerById;
 
 export async function createCustomer(req, res) {
   try {
-    const customer = await Customer.create({
+    const [customer] = await Customer.create([{
       owner: ownerIdFrom(req),
       name: req.body.name,
       phone: req.body.phone ?? req.body.contactInfo ?? "",
       email: req.body.email ?? "",
       address: req.body.address ?? "",
-    });
+    }], { session: req.accountSession });
     respond(res, 201, "Customer created", customer);
   } catch (err) {
     respondError(res, 500, err.message);
@@ -239,7 +242,7 @@ export async function updateCustomer(req, res) {
         email: req.body.email,
         address: req.body.address,
       },
-      { new: true, runValidators: true },
+      { new: true, runValidators: true, session: req.accountSession },
     );
 
     if (!customer) return respondError(res, 404, "Customer not found");
@@ -272,7 +275,7 @@ export async function deleteCustomer(req, res) {
     const customer = await Customer.findOneAndUpdate(
       { _id: req.params.id, owner },
       { isDeleted: true, deletedAt: new Date() },
-      { new: true },
+      { new: true, session: req.accountSession },
     );
 
     if (!customer) return respondError(res, 404, "Customer not found");

@@ -12,13 +12,13 @@ const toCentavos = (value) => Math.round((Number(value) || 0) * 100);
 const formatDate = (date) =>
   date ? new Date(date).toLocaleDateString() : "None";
 
-export default function PersonsPage() {
+export default function PersonsPage({ readOnly = false }) {
   const params = useParams();
-  if (params.id) return <CustomerProfile id={params.id} />;
-  return <CustomerList />;
+  if (params.id) return <CustomerProfile id={params.id} readOnly={readOnly} />;
+  return <CustomerList readOnly={readOnly} />;
 }
 
-function CustomerList() {
+function CustomerList({ readOnly }) {
   const { getPersons, createPerson } = usePersonApi();
   const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
@@ -75,7 +75,7 @@ function CustomerList() {
         </div>
       </div>
 
-      <div className="mb-4 flex gap-2">
+      {!readOnly && <div className="mb-4 flex gap-2">
         <input
           className="input min-h-11"
           value={name}
@@ -85,7 +85,7 @@ function CustomerList() {
         <button className="secondary-action" onClick={addCustomer}>
           Add
         </button>
-      </div>
+      </div>}
 
       <div className="space-y-3">
         {customers.map((customer) => (
@@ -120,7 +120,7 @@ function CustomerList() {
   );
 }
 
-function CustomerProfile({ id }) {
+function CustomerProfile({ id, readOnly }) {
   const { getPersonById, addPayment } = usePersonApi();
   const [profile, setProfile] = useState(null);
   const [tab, setTab] = useState("transactions");
@@ -231,9 +231,9 @@ function CustomerProfile({ id }) {
         </div>
       )}
 
-      <button className="fab" onClick={() => setPaymentOpen(true)}>
+      {!readOnly && <button className="fab" onClick={() => setPaymentOpen(true)}>
         Record Payment
-      </button>
+      </button>}
 
       {detail && (
         <TransactionDrawer

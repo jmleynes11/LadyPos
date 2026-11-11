@@ -43,7 +43,6 @@ export default function ActiveProductsModal({ onClose, onSuccess }) {
   }
 
   async function handleSubmit() {
-    console.log("Selected product IDs:", selected);
     await setActiveProducts(selected);
     onSuccess();
   }

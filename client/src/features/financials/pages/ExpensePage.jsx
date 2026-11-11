@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useExpenseApi } from "../services/expenseApi";
+import { logClientError } from "../../../shared/utils/safeDiagnostics.js";
 
-export default function ExpensePage() {
+export default function ExpensePage({ readOnly = false }) {
   const { getExpenses, createExpense, deleteExpense, updateExpense } =
     useExpenseApi();
   const [date, setDate] = useState("");
@@ -32,7 +33,7 @@ export default function ExpensePage() {
       const data = await getExpenses();
       setExpenses(data);
     } catch (err) {
-      console.error("Load expenses failed:", err);
+      logClientError("expenses.load_failed", err);
     } finally {
       setLoading(false);
     }
@@ -54,7 +55,7 @@ export default function ExpensePage() {
       resetForm();
       loadExpenses();
     } catch (err) {
-      console.error("Update failed:", err);
+      logClientError("expenses.update_failed", err);
     }
   };
 
@@ -85,7 +86,7 @@ export default function ExpensePage() {
       setDate("");
       loadExpenses();
     } catch (err) {
-      console.error("Add expense failed:", err);
+      logClientError("expenses.create_failed", err);
     }
   };
 
@@ -94,7 +95,7 @@ export default function ExpensePage() {
       await deleteExpense(id);
       loadExpenses();
     } catch (err) {
-      console.error("Delete failed:", err);
+      logClientError("expenses.delete_failed", err);
     }
   };
 
@@ -110,7 +111,7 @@ export default function ExpensePage() {
       <h1 className="text-xl font-bold">Expenses</h1>
 
       {/* ADD EXPENSE */}
-      <div
+      {!readOnly && <div
         className="p-4 rounded-xl border space-y-3"
         style={{
           backgroundColor: "var(--color-surface)",
@@ -174,7 +175,7 @@ export default function ExpensePage() {
             {editingId ? "Update" : "Add"}
           </button>
         </form>
-      </div>
+      </div>}
 
       {/* EXPENSE LIST */}
       <div
@@ -214,7 +215,7 @@ export default function ExpensePage() {
                 </p>
               </div>
 
-              <div className="flex gap-2">
+              {!readOnly && <div className="flex gap-2">
                 <button
                   onClick={() => startEdit(e)}
                   style={{ color: "var(--color-primary)" }}
@@ -224,11 +225,11 @@ export default function ExpensePage() {
 
                 <button
                   onClick={() => handleDelete(e._id)}
-                  style={{ color: "#ef4444" }}
+                  style={{ color: "var(--color-danger)" }}
                 >
                   Delete
                 </button>
-              </div>
+              </div>}
             </div>
           ))}
         </div>

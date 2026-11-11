@@ -1,0 +1,62 @@
+
+> serveflow-pos-client@2.0.0 test
+> node --test tests/*.test.js
+
+✔ actual account API registration preserves an indeterminate failure without automatically retrying (10.0876ms)
+✔ actual account API edit preserves an indeterminate failure without automatically retrying (1.4416ms)
+✔ actual account API deletion preserves an indeterminate failure without automatically retrying (1.2866ms)
+✔ actual account API profile change preserves an indeterminate failure without automatically retrying (1.2036ms)
+✔ actual account API password change preserves an indeterminate failure without automatically retrying (1.6037ms)
+✔ actual account API creation preserves an indeterminate failure without automatically retrying (1.5438ms)
+✔ actual account API administrator update preserves an indeterminate failure without automatically retrying (1.7526ms)
+✔ actual account API administrator deletion preserves an indeterminate failure without automatically retrying (1.2996ms)
+✔ cashier review detects stale cart prices, unchanged totals with offsetting edits, and refresh changes (1.894ms)
+✔ changed cashier prices block payment until the revised total is confirmed (73.9196ms)
+✔ GCash requires verified full payment and a nonblank reference; busy and uncertain operations block completion (9.948ms)
+✔ editing payment method, reference or price consent invalidates prior payment verification (4.0412ms)
+✔ shared review preserves existing queue payment presentation without cashier-catalog price consent (1.3781ms)
+✔ cashier catalog adds items, submits directly, resumes the same checkout and issues a cash receipt (104.5991ms)
+✔ cashier catalog adds items, submits directly, resumes the same checkout and issues a gcash receipt (53.933ms)
+✔ student catalog retains unpaid submission without direct payment review (31.4256ms)
+✔ cashier completion rejection refreshes changed prices and clears payment and total confirmation (31.706ms)
+✔ cashier uncertain payment retains its operation identity and cannot dispatch another payment (28.9022ms)
+✔ cashier double submit and page reload retain one returned checkout ID without queue requests (26.8311ms)
+✔ a stale backend quote fails closed on the payment URL instead of falling back to the queue (27.2357ms)
+✔ kiosk clears cart/proof at approved five-minute boundary without changing server orders (6.3434ms)
+✔ activity extends active session but cannot restore stale background state (0.5366ms)
+✔ Finish/New Order reset and idle expiry reject late in-flight credentials (1.9573ms)
+✔ network proof responses cannot extend the idle deadline (0.4814ms)
+✔ session snapshots cannot mutate state; fresh page instance has no previous credential (0.436ms)
+✔ visibility/pagehide/event cleanup clears memory and prevents listener leaks (0.7737ms)
+✔ real receipt renders invoice API DTO with centavos, recorded prices and payment details (55.2306ms)
+✔ missing transaction/product history does not crash or fabricate price totals (4.2497ms)
+✔ actual frontend logout clears both browser stores locally without calling authentication APIs (10.1363ms)
+✔ manager navigation removes catalog and queue even when order capabilities remain available (4.6895ms)
+✔ manager product management lists shared products and exposes editing without an initial audit reason (38.4894ms)
+✔ category management includes unused categories and rename/delete controls (5.3631ms)
+✔ manager editor exposes metadata without a price or inventory input (22.8526ms)
+✔ pending operation survives remount and stays isolated by account without request data (4.5013ms)
+✔ unavailable, corrupt or silently failing browser storage blocks dispatch (7.096ms)
+✔ logout clears credentials but retains only account-bound reconciliation metadata (6.4538ms)
+✔ conditional frontend actions require the actual resource bound by server capabilities (0.6469ms)
+✔ student workspace offers catalog and owned orders without staff workspaces (13.0517ms)
+✔ cashier workspace separates own history and reversal requests from inventory and settings (0.5083ms)
+✔ manager workspace exposes operational views without account administration (0.508ms)
+✔ administrator navigation follows returned capabilities and preserves settings (3.6545ms)
+✔ missing context and legacy accounts do not expose operational views (0.6267ms)
+✔ catalog search intersects category, matches SKU, and retains unavailable products (0.467ms)
+✔ existing catalog visual and product details render stored photos and preserve missing-photo fallback (23.9377ms)
+✔ photo selector displays preview, permitted types, limits and disabled state (3.0038ms)
+✔ Axios diagnostics retain useful metadata while excluding headers, passwords, bodies and server secrets (5.689ms)
+✔ untrusted event, code, method and status strings cannot become diagnostics (0.9214ms)
+✔ network/cancellation diagnostics work without a response; invalid statuses are omitted (0.2859ms)
+✔ actual Axios interceptor logs safely and rejects the original error without making a network request (25.6389ms)
+✔ frontend console output stays centralized; old raw payload/storage/error logging cannot reappear (153.5989ms)
+ℹ tests 50
+ℹ suites 0
+ℹ pass 50
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1490.0041

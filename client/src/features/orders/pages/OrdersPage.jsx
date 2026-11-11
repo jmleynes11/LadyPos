@@ -24,7 +24,7 @@ const toCentavos = (value) => Math.round((Number(value) || 0) * 100);
 const customerName = (order) => order.customer?.name || order.personId?.name || "Walk-in";
 const itemCount = (order) => (order.items || order.products || []).reduce((sum, item) => sum + item.quantity, 0);
 
-export default function OrdersPage() {
+export default function OrdersPage({ readOnly = false }) {
   const { getOrders, updateOrder, markOrderPaid, deleteOrder } = useOrderApi();
   const { ensureInvoice } = useInvoiceApi();
   const location = useLocation();
@@ -221,6 +221,7 @@ export default function OrdersPage() {
             onSettle={() => setPaymentSheet({ mode: "settle", order })}
             onInvoice={() => printInvoice(order)}
             onVoid={() => voidOrder(order)}
+            readOnly={readOnly}
           />
         ))}
       </main>
@@ -238,7 +239,7 @@ export default function OrdersPage() {
   );
 }
 
-function OrderCard({ order, selected, busy, onSelect, onComplete, onSettle, onInvoice, onVoid }) {
+function OrderCard({ order, selected, busy, onSelect, onComplete, onSettle, onInvoice, onVoid, readOnly }) {
   const status = order.paymentStatus || "debt";
   return (
     <article className={`order-card ${selected ? "selected" : ""}`}>
@@ -280,12 +281,12 @@ function OrderCard({ order, selected, busy, onSelect, onComplete, onSettle, onIn
       )}
 
       <div className="order-actions">
-        {order.orderStatus === "pending" && (
+        {!readOnly && order.orderStatus === "pending" && (
           <button className="primary-action" onClick={onComplete} disabled={busy}>
             Complete Sale
           </button>
         )}
-        {order.orderStatus === "completed" && order.balance > 0 && (
+        {!readOnly && order.orderStatus === "completed" && order.balance > 0 && (
           <button className="primary-action" onClick={onSettle} disabled={busy}>
             Settle Debt
           </button>
@@ -295,9 +296,9 @@ function OrderCard({ order, selected, busy, onSelect, onComplete, onSettle, onIn
             Invoice
           </button>
         )}
-        <button className="secondary-action danger-action" onClick={onVoid} disabled={busy}>
+        {!readOnly && <button className="secondary-action danger-action" onClick={onVoid} disabled={busy}>
           Void
-        </button>
+        </button>}
       </div>
     </article>
   );

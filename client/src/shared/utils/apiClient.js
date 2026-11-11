@@ -1,7 +1,8 @@
 // apiClient.js
 import axios from "axios";
+import { logClientError } from "./safeDiagnostics.js";
 
-export const createApiClient = (jwt) => {
+export const createApiClient = (jwt, onUnauthorized) => {
   const instance = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
     headers: {
@@ -13,7 +14,8 @@ export const createApiClient = (jwt) => {
     (res) => res,
     (err) => {
       if (err.response?.status === 401) {
-        console.warn("Unauthorized - redirect to login");
+        logClientError("auth.request_unauthorized", err);
+        try { onUnauthorized?.(); } catch { /* Keep the original HTTP failure. */ }
       }
       return Promise.reject(err);
     },

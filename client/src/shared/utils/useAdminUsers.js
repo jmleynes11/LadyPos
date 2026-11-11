@@ -15,6 +15,8 @@ const PAGE_SIZE = 10;
 
 const validateUserForm = (data, isEdit) => {
   const errors = {};
+  if (!data.reason?.trim()) errors.reason = "Reason is required";
+  if (!data.role) errors.general = "Select an approved role";
   if (!data.identifier?.trim() || data.identifier.trim().length < 3)
     errors.identifier = "Identifier must be at least 3 characters";
   if (!isEdit && (!data.password || data.password.length < 6))
@@ -93,14 +95,19 @@ export function useAdminUsers() {
       setFormErrors({});
 
       const payload = {
+        reason: formData.reason,
+        operationId: formData.operationId,
+        ...(isEdit ? { expectedVersion: formData.securityVersion } : {}),
+        ...(formData.reviewId ? { reviewId: formData.reviewId } : {}),
         identifier: formData.identifier.toLowerCase().trim(),
         role: formData.role,
         confirmed: formData.confirmed,
-        name: formData.name?.trim() || null,
+        name: formData.name?.trim() || "",
         phone: normalizePHPhone(formData.phone),
-        address: formData.address?.trim() || null,
+        address: formData.address?.trim() || "",
       };
       if (formData.password) payload.password = formData.password;
+      if (!isEdit) delete payload.confirmed;
 
       try {
         if (isEdit) {
@@ -130,7 +137,9 @@ export function useAdminUsers() {
         return false;
       }
       try {
-        await adminDeleteUser(id, jwt);
+        const reason = window.prompt("Reason for deleting this account");
+        if (!reason?.trim()) return false;
+        await adminDeleteUser(id, jwt, { reason, operationId: crypto.randomUUID() });
         setUsers((prev) => prev.filter((u) => u._id !== id));
         toast.success("User deleted");
         return true;

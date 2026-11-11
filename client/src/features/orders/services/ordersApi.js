@@ -17,7 +17,6 @@ export function useOrderApi() {
   };
 
   const createOrder = async (data) => {
-    console.log("Creating order with data:", data);
     const res = await api.post("/orders", data);
     return unwrap(res);
   };

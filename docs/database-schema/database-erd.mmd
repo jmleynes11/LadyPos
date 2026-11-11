@@ -1,0 +1,265 @@
+%% Appendix G — code-defined MongoDB collection mappings, 2026-11-11.
+%% 23 declarations; 22 loaded by app.js. financials is definition-only.
+%% Dotted links are logical/application references, never enforced foreign keys.
+%% Cardinalities assume valid target identifiers; target existence is not guaranteed.
+%% All embedded structures remain attributes of their parent collection.
+%% This is a relationship overview. The audit contains the full path/index/reference ledger.
+erDiagram
+    direction TB
+
+    users {
+        ObjectId _id PK
+        String identifier UK
+        String phone "sparse unique declaration"
+        String role
+        Mixed storeIds "embedded ObjectId array; validated; no ref"
+        Mixed tokenVersion
+        Mixed authorityVersion
+    }
+    stores {
+        ObjectId _id PK
+        String name
+        ObjectId createdBy "User ref"
+        ObjectId orderCustomer "Customer ref; not unique"
+        StringArray categoryNames "embedded category labels"
+    }
+    customers {
+        ObjectId _id PK
+        ObjectId owner "User ref"
+        Mixed storeId "optional BSON ObjectId; no ref"
+        String name
+        Boolean isDeleted
+    }
+    products {
+        ObjectId _id PK
+        ObjectId owner "User ref"
+        Mixed storeId "optional BSON ObjectId; no ref"
+        String sku "not unique"
+        Number price
+        Number stock
+        Mixed sizeStocks "embedded size to quantity map"
+        String category "label; no Category model"
+    }
+    transactions {
+        ObjectId _id PK
+        ObjectId owner "User ref"
+        ObjectId customer "Customer ref"
+        Mixed storeId "optional BSON ObjectId; no ref"
+        EmbeddedArray items "no child _id; not a collection"
+        ObjectId items_product "items product ref to Product"
+        Number items_quantity "embedded line field"
+        Number items_unitPrice "embedded line field"
+        Number items_subtotal "embedded line field"
+        String items_name_sku_category_size "embedded line snapshots"
+        ObjectId studentUser "optional User ref"
+        ObjectId assignedTo "optional User ref"
+        ObjectId processedBy "optional User ref"
+        ObjectId cancelledBy "optional application reference"
+        ObjectId reversalId "optional application reference"
+        String bookstoreReference "sparse unique declaration"
+        String orderStatus
+        Number totalAmount
+    }
+    invoices {
+        ObjectId _id PK
+        ObjectId owner "User ref"
+        ObjectId customer "Customer ref"
+        ObjectId transaction "Transaction ref; not unique"
+        Mixed storeId "optional BSON ObjectId; no ref"
+        String invoiceNumber "not unique"
+        Mixed snapshot "embedded receipt DTO with item snapshots"
+        ObjectId reversalId "optional application reference"
+    }
+    invoicecounters {
+        ObjectId _id PK
+        ObjectId owner "User ref"
+        String type
+        Number year
+        Number seq "owner-type-year index not unique"
+    }
+    debtpayments {
+        ObjectId _id PK
+        ObjectId owner "User ref"
+        ObjectId customer "Customer ref"
+        ObjectId transaction "optional Transaction ref"
+        Mixed storeId "optional BSON ObjectId; no ref"
+        Number amountPaid
+    }
+    expenses {
+        ObjectId _id PK
+        ObjectId userId "User ref"
+        ObjectId createdBy "optional User ref"
+        Number amount
+        String category
+    }
+    financials {
+        ObjectId _id PK
+        ObjectId userId "User ref; model not loaded by app"
+        Number capitalInvested
+        Number grossIncome
+        Number netIncome
+        EmbeddedArray expenses "child _id-type-amount-date; not expenses collection"
+    }
+    stockmovements {
+        ObjectId _id PK
+        ObjectId storeId "application reference"
+        ObjectId productId "application reference"
+        ObjectId actorId "application reference"
+        ObjectId transactionId "optional application reference"
+        Number before
+        Number delta
+        Number after
+        EmbeddedArray sizeChanges "size-before-after-delta; no child _id"
+        String operationId "unique actorId-operationId-productId tuple"
+    }
+    bookstorepayments {
+        ObjectId _id PK
+        ObjectId storeId "application reference"
+        ObjectId transactionId UK "application reference"
+        ObjectId actorId "application reference"
+        Number amount
+        String method
+    }
+    bookstorereversalrequests {
+        ObjectId _id PK
+        ObjectId storeId "application reference"
+        ObjectId transactionId "not unique"
+        ObjectId requestedBy "application User reference"
+        ObjectId approvedBy "optional application User reference"
+        String status
+    }
+    bookstoresalereversals {
+        ObjectId _id PK
+        ObjectId storeId "application reference"
+        ObjectId transactionId UK "application reference"
+        ObjectId requestId "application reference; not unique"
+        ObjectId approvedBy "application User reference"
+        Number amount
+        MixedArray returned "embedded productId-quantity-optional size"
+    }
+    bookstoresequences {
+        ObjectId _id PK
+        ObjectId storeId "application reference"
+        Number year "unique storeId-year tuple"
+        Number seq
+    }
+    guestorderintents {
+        ObjectId _id PK "reused as submitted guest transaction id"
+        ObjectId storeId "application reference"
+        Mixed verification "embedded digest-issuedAt-expiresAt; select false"
+    }
+    bookstoreauditevents {
+        ObjectId _id PK
+        ObjectId storeId "application reference"
+        ObjectId actorId "required for account actor"
+        String actorKind
+        String actorKey "account id or guest intent id"
+        String operationId "unique actorKey-operationId-sequence tuple"
+        Number sequence
+        String targetKind "polymorphic discriminator"
+        ObjectId targetId "polymorphic application reference"
+        Mixed before "embedded projection"
+        Mixed after "embedded projection"
+    }
+    bookstoreoperationreceipts {
+        ObjectId _id PK
+        ObjectId storeId "application reference"
+        String actorKey "account id or guest intent id"
+        String operationId "unique actorKey-operationId tuple"
+        Mixed result "embedded response DTO"
+    }
+    accountauditevents {
+        ObjectId _id PK
+        String eventId UK
+        String operationId "unique operationId-sequence tuple"
+        Number sequence
+        Object actor "embedded id-role-kind; no child _id"
+        ObjectId subjectAccountId "User ref"
+        ObjectId reviewId "optional application reference"
+        ObjectId grantId "optional application reference"
+        Mixed before "embedded snapshot"
+        Mixed after "embedded snapshot"
+        Mixed scope "embedded account or capability scope"
+    }
+    accountoperationreceipts {
+        ObjectId _id PK
+        String operationId UK
+        ObjectId actorId "User ref"
+        ObjectId targetId "User ref"
+        Mixed result "embedded response DTO"
+    }
+    accountrolereviews {
+        ObjectId _id PK
+        ObjectId targetAccountId "User ref"
+        ObjectId reviewerId "User ref"
+        ObjectId supersedes "optional self reference; no ref metadata"
+        String proposedRole
+        String status
+        StringArray evidenceRefs "embedded evidence strings"
+    }
+    conditionalaccountgrants {
+        ObjectId _id PK
+        ObjectId recipientAccountId "User ref"
+        ObjectId grantedBy "User ref"
+        ObjectId revokedBy "optional application User reference"
+        String capability
+        Mixed scope "embedded kind and resourceIds array"
+        Date effectiveAt
+        Date expiresAt "no TTL index"
+    }
+    accountadministrationrealms {
+        String _id PK "account-management used by service"
+        Number revision "shared transactional write fence"
+    }
+
+    users }o..o{ stores : "storeIds membership array - application"
+    users o|..o{ stores : "createdBy ref"
+    customers o|..o{ stores : "orderCustomer ref - not unique"
+    users ||..o{ customers : "owner ref"
+    stores o|..o{ customers : "storeId optional Mixed"
+    users ||..o{ products : "owner ref"
+    stores o|..o{ products : "storeId optional Mixed"
+    stores o|..o{ transactions : "storeId optional Mixed"
+    users ||..o{ transactions : "owner ref"
+    users o|..o{ transactions : "studentUser ref"
+    users o|..o{ transactions : "assignedTo ref"
+    users o|..o{ transactions : "processedBy ref"
+    customers ||..o{ transactions : "customer ref"
+    transactions }o..o{ products : "items.product embedded refs"
+    transactions ||..o{ invoices : "transaction ref - not unique"
+    customers ||..o{ invoices : "customer ref"
+    users ||..o{ invoices : "owner ref"
+    stores o|..o{ invoices : "storeId optional Mixed"
+    users ||..o{ invoicecounters : "owner ref"
+    customers ||..o{ debtpayments : "customer ref"
+    users ||..o{ debtpayments : "owner ref"
+    stores o|..o{ debtpayments : "storeId optional Mixed"
+    transactions o|..o{ debtpayments : "optional transaction ref"
+    users ||..o{ expenses : "userId ref"
+    users ||..o{ financials : "userId ref - definition only"
+    stores ||..o{ stockmovements : "storeId application"
+    products ||..o{ stockmovements : "productId application"
+    transactions o|..o{ stockmovements : "optional transactionId application"
+    transactions ||..o| bookstorepayments : "unique transactionId declaration"
+    stores ||..o{ bookstorepayments : "storeId application"
+    transactions ||..o{ bookstorereversalrequests : "transactionId application"
+    transactions ||..o| bookstoresalereversals : "unique transactionId declaration"
+    bookstorereversalrequests ||..o{ bookstoresalereversals : "requestId not unique - service applies once"
+    stores ||..o{ bookstorereversalrequests : "storeId application"
+    stores ||..o{ bookstoresalereversals : "storeId application"
+    bookstoresalereversals o|..o{ invoices : "reversalId optional application"
+    stores ||..o{ bookstoresequences : "storeId application"
+    stores ||..o{ guestorderintents : "storeId application"
+    guestorderintents o|..o| transactions : "shared id - guest orders only"
+    stores ||..o{ bookstoreauditevents : "storeId application"
+    stores ||..o{ bookstoreoperationreceipts : "storeId application"
+    users ||..o{ accountauditevents : "subjectAccountId ref - may outlive user"
+    users ||..o{ accountoperationreceipts : "actorId and targetId refs"
+    users ||..o{ accountrolereviews : "targetAccountId and reviewerId refs"
+    accountrolereviews o|..o{ accountrolereviews : "supersedes application"
+    accountrolereviews o|..o{ accountauditevents : "reviewId application"
+    users ||..o{ conditionalaccountgrants : "recipientAccountId and grantedBy refs"
+    conditionalaccountgrants o|..o{ accountauditevents : "grantId application"
+    %% accountadministrationrealms is a singleton write-fence by application convention.
+    %% Polymorphic audit targets, actorKey, grant scope and Mixed DTO copies are
+    %% enumerated in report section 5 instead of drawing every crossing edge.

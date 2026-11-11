@@ -1,0 +1,44 @@
+
+> serveflow-pos-client@2.0.0 test
+> node --test tests/*.test.js
+
+✔ actual account API registration preserves an indeterminate failure without automatically retrying (9.9717ms)
+✔ actual account API edit preserves an indeterminate failure without automatically retrying (1.8114ms)
+✔ actual account API deletion preserves an indeterminate failure without automatically retrying (1.2862ms)
+✔ actual account API profile change preserves an indeterminate failure without automatically retrying (1.2011ms)
+✔ actual account API password change preserves an indeterminate failure without automatically retrying (1.2556ms)
+✔ actual account API creation preserves an indeterminate failure without automatically retrying (1.6779ms)
+✔ actual account API administrator update preserves an indeterminate failure without automatically retrying (1.5881ms)
+✔ actual account API administrator deletion preserves an indeterminate failure without automatically retrying (2.3183ms)
+✔ kiosk clears cart/proof at approved five-minute boundary without changing server orders (12.1575ms)
+✔ activity extends active session but cannot restore stale background state (0.6583ms)
+✔ Finish/New Order reset and idle expiry reject late in-flight credentials (3.005ms)
+✔ network proof responses cannot extend the idle deadline (0.6363ms)
+✔ session snapshots cannot mutate state; fresh page instance has no previous credential (1.1059ms)
+✔ visibility/pagehide/event cleanup clears memory and prevents listener leaks (1.4457ms)
+✔ real receipt renders invoice API DTO with centavos, recorded prices and payment details (60.3953ms)
+✔ missing transaction/product history does not crash or fabricate price totals (4.2519ms)
+✔ actual frontend logout clears both browser stores locally without calling authentication APIs (17.0455ms)
+✔ pending operation survives remount and stays isolated by account without request data (5.1589ms)
+✔ unavailable, corrupt or silently failing browser storage blocks dispatch (1.2739ms)
+✔ logout clears credentials but retains only account-bound reconciliation metadata (4.1451ms)
+✔ conditional frontend actions require the actual resource bound by server capabilities (8.1471ms)
+✔ student workspace offers catalog and owned orders without staff workspaces (3.5044ms)
+✔ cashier workspace separates own history and reversal requests from inventory and settings (0.5184ms)
+✔ manager workspace exposes operational views without account administration (0.5431ms)
+✔ administrator navigation follows returned capabilities and preserves settings (3.4249ms)
+✔ missing context and legacy accounts do not expose operational views (0.6975ms)
+✔ catalog search intersects category, matches SKU, and retains unavailable products (7.3872ms)
+✔ Axios diagnostics retain useful metadata while excluding headers, passwords, bodies and server secrets (5.9341ms)
+✔ untrusted event, code, method and status strings cannot become diagnostics (0.6213ms)
+✔ network/cancellation diagnostics work without a response; invalid statuses are omitted (0.3218ms)
+✔ actual Axios interceptor logs safely and rejects the original error without making a network request (62.9823ms)
+✔ frontend console output stays centralized; old raw payload/storage/error logging cannot reappear (142.1218ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1945.078

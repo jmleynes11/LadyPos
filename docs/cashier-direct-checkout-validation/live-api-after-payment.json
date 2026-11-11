@@ -1,0 +1,18 @@
+{
+  "checkoutId": "6aed3d835365d9b80faf9d6d",
+  "stockBeforePayment": 10,
+  "stockAfterPayment": 9,
+  "submissionEvents": 1,
+  "paymentEvents": 1,
+  "saleCompletionEvents": 1,
+  "receiptEvents": 1,
+  "stockMovementCount": 1,
+  "stockDelta": -1,
+  "repeatedCompletionStatus": 409,
+  "queueOrderIds": [
+    "6aed3dd25365d9b80faf9d70",
+    "6aed3dd25365d9b80faf9d76"
+  ],
+  "cashierCheckoutInQueue": false,
+  "receiptId": "6aed3df65365d9b80faf9d7b"
+}

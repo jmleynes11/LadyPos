@@ -1,0 +1,11 @@
+{
+  "environment": "Disposable in-memory localhost fixture only",
+  "passed": 5,
+  "results": [
+    "Four canonical roles authenticate through actual localhost API and receive matching context",
+    "Backend denies non-admin pricing, cashier adjustment/account directory, customer history and anonymous protected catalog",
+    "Student unpaid submission leaves stock unchanged",
+    "Unverified payment is rejected without inventory deduction",
+    "Confirmed completion returns a receipt; replay records one sale and deducts inventory exactly once in staged persistence"
+  ]
+}

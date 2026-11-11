@@ -3,6 +3,16 @@ import Invoice from "../models/Invoice.js";
 import Transaction from "../models/Order.js";
 import InvoiceCounter from "../models/InvoiceCounter.js";
 import { respond, respondError } from "../utils/responseHelpers.js";
+import { invoiceDto } from "../utils/invoiceDto.js";
+import { reverseInvoiceAlias } from "../services/bookstoreAliases.js";
+
+const receiptPopulation = [
+  { path: "customer", select: "name phone address" },
+  { path: "transaction", populate: [
+    { path: "items.product", select: "name sku price" },
+    { path: "processedBy", select: "name identifier" },
+  ] },
+];
 
 const ownerIdFrom = (req) => req.user?._id || req.user?.id;
 const pageFrom = (req) => Math.max(1, Number.parseInt(req.query.page ?? 1, 10));
@@ -74,7 +84,7 @@ export const getInvoices = async (req, res) => {
     const owner = ownerIdFrom(req);
     const page = pageFrom(req);
     const limit = limitFrom(req);
-    const filter = { owner };
+    const filter = { owner, moneyUnit: { $exists: false } };
 
     if (req.query.status) filter.status = req.query.status;
     if (req.query.customer) filter.customer = req.query.customer;
@@ -86,18 +96,14 @@ export const getInvoices = async (req, res) => {
 
     const [invoices, total] = await Promise.all([
       Invoice.find(filter)
-        .populate("customer", "name phone address")
-        .populate({
-          path: "transaction",
-          populate: { path: "items.product", select: "name sku price" },
-        })
+        .populate(receiptPopulation)
         .sort({ issuedAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit),
       Invoice.countDocuments(filter),
     ]);
 
-    respond(res, 200, "Invoices loaded", invoices, {
+    respond(res, 200, "Invoices loaded", invoices.map(invoiceDto), {
       page,
       limit,
       total,
@@ -113,15 +119,13 @@ export const getInvoiceById = async (req, res) => {
     const invoice = await Invoice.findOne({
       _id: req.params.id,
       owner: ownerIdFrom(req),
+      moneyUnit: { $exists: false },
     })
-      .populate("customer", "name phone email address")
-      .populate({
-        path: "transaction",
-        populate: { path: "items.product", select: "name sku price" },
-      });
+      .populate(receiptPopulation)
+      .populate("customer", "name phone email address");
 
     if (!invoice) return respondError(res, 404, "Invoice not found");
-    respond(res, 200, "Invoice loaded", invoice);
+    respond(res, 200, "Invoice loaded", invoiceDto(invoice));
   } catch (err) {
     respondError(res, 500, err.message);
   }
@@ -139,11 +143,14 @@ export const getOrCreateInvoice = async (req, res) => {
     const transaction = await Transaction.findOne({
       _id: transactionId,
       owner,
-    });
+      origin: { $exists: false },
+    }).session(req.accountSession || null);
     if (!transaction) return respondError(res, 404, "Transaction not found");
 
-    const invoice = await createInvoiceForTransaction(transaction);
-    respond(res, 200, "Invoice loaded", invoice);
+    const invoice = await Invoice.findOne({ owner, transaction: transaction._id, moneyUnit: { $exists: false } });
+    if (!invoice) return respondError(res, 403, "Receipt issuance requires an authorized operational role");
+    await invoice.populate(receiptPopulation);
+    respond(res, 200, "Invoice loaded", invoiceDto(invoice));
   } catch (err) {
     respondError(res, 500, err.message);
   }
@@ -151,15 +158,10 @@ export const getOrCreateInvoice = async (req, res) => {
 
 export const markVoid = async (req, res) => {
   try {
-    const invoice = await Invoice.findOneAndUpdate(
-      { _id: req.params.id, owner: ownerIdFrom(req) },
-      { status: "void" },
-      { new: true },
-    );
-
-    if (!invoice) return respondError(res, 404, "Invoice not found");
-    respond(res, 200, "Invoice voided", invoice);
+    const result = await reverseInvoiceAlias(req.user, req.params.id, req.body);
+    respond(res, 200, "Reversal applied", result);
   } catch (err) {
-    respondError(res, 500, err.message);
+    if (!err.statusCode || err.statusCode >= 500) throw err;
+    respondError(res, err.statusCode, err.message);
   }
 };

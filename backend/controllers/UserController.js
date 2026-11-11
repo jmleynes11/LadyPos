@@ -2,60 +2,32 @@
 import asyncHandler from "express-async-handler";
 import User from "../models/User.js";
 import { generateToken } from "../utils/generateToken.js";
-import bcrypt from "bcryptjs";
+import { canonicalAccountId } from "../utils/accountIdentity.js";
+import { resolveAccountRole } from "../auth/accountRoles.js";
+import { isAccountActive } from "../auth/accountState.js";
+import { createAccount, updateAccount, deleteAccount, publicAccount } from "../services/accountManagement.js";
+
 
 // ─── Public ──────────────────────────────────────────────────────────────────
 
-// POST /api/users/register
+// POST /api/users/register — administrator-only staff provisioning.
 export const createUser = asyncHandler(async (req, res) => {
-  const { identifier, password, phone, name, address } = req.body;
-
-  if (!identifier || !password) {
-    res.status(400);
-    throw new Error("Identifier and password are required");
-  }
-
-  const exists = await User.findOne({ identifier: identifier.toLowerCase() });
-  if (exists) {
-    res.status(409);
-    throw new Error("User already exists");
-  }
-
-  const user = await User.create({
-    identifier: identifier.toLowerCase(),
-    password, // pre-save hook hashes
-    role: req.body.role || "user",
-    confirmed: req.body.confirmed ?? false,
-    name: name ?? null,
-    phone: phone ?? null,
-    address: address ?? null,
-  });
-
-  res.status(201).json({
-    _id: user._id,
-    identifier: user.identifier,
-    role: user.role,
-    confirmed: user.confirmed,
-    name: user.name,
-    phone: user.phone,
-    address: user.address,
-    createdAt: user.createdAt,
-    token: await generateToken(user),
-  });
+  const result = await createAccount(req.user, req.body || {});
+  res.status(201).json({ ...result.account, operationId: result.operationId });
 });
 
 // POST /api/users/login
 export const loginUser = asyncHandler(async (req, res) => {
-  const { identifier, password } = req.body;
+  const { identifier, password } = req.body || {};
 
-  if (!identifier || !password) {
+  if (typeof identifier !== "string" || !identifier || typeof password !== "string" || !password) {
     res.status(400);
     throw new Error("Identifier and password are required");
   }
 
   const user = await User.findOne({ identifier: identifier.toLowerCase() });
   const passwordCorrect = user
-    ? await bcrypt.compare(password, user.password)
+    ? await user.matchPassword(password)
     : false;
 
   if (!user || !passwordCorrect) {
@@ -63,7 +35,12 @@ export const loginUser = asyncHandler(async (req, res) => {
     throw new Error("Invalid credentials");
   }
 
-  if (!user.confirmed) {
+  if (!resolveAccountRole(user.role) || !isAccountActive(user)) {
+    res.status(401);
+    throw new Error("Invalid credentials");
+  }
+
+  if (user.confirmed !== true) {
     res.status(403);
     throw new Error("Account not confirmed");
   }
@@ -85,72 +62,28 @@ export const loginUser = asyncHandler(async (req, res) => {
 
 // GET /api/users/profile
 export const getProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id).select("-password");
+  const user = await User.findById(req.user.id).select("_id identifier role confirmed accountState name phone address createdAt tokenVersion");
   if (!user) {
     res.status(404);
     throw new Error("User not found");
   }
-  res.json(user);
+  res.json(publicAccount(user));
 });
 
 // PUT /api/users/profile
 export const updateProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
-  if (!user) {
-    res.status(404);
-    throw new Error("User not found");
-  }
-
-  const { name, phone, address, identifier } = req.body;
-
-  if (identifier !== undefined) {
-    const taken = await User.findOne({
-      identifier: identifier.toLowerCase().trim(),
-      _id: { $ne: user._id },
-    });
-    if (taken) {
-      res.status(409);
-      throw new Error("Identifier already taken");
-    }
-    user.identifier = identifier.toLowerCase().trim();
-  }
-
-  if (name !== undefined) user.name = name;
-  if (phone !== undefined) user.phone = phone;
-  if (address !== undefined) user.address = address;
-
-  const updated = await user.save();
-  const result = updated.toObject();
-  delete result.password;
-  res.json(result);
+  const body = Object.fromEntries(["identifier", "name", "phone", "address", "reason", "operationId"].filter(field => req.body?.[field] !== undefined).map(field => [field, req.body[field]]));
+  body.reason ??= "Self-service profile update";
+  const result = await updateAccount(req.user, req.user.id, body, { self: true });
+  res.json({ ...result.account, operationId: result.operationId });
 });
 
 // PUT /api/users/password
 export const updatePassword = asyncHandler(async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-
-  if (!currentPassword || !newPassword) {
-    res.status(400);
-    throw new Error("Current and new password are required");
-  }
-  if (newPassword.length < 6) {
-    res.status(400);
-    throw new Error("Password must be at least 6 characters");
-  }
-
-  const user = await User.findById(req.user._id);
-  if (!user) {
-    res.status(404);
-    throw new Error("User not found");
-  }
-
-  if (!(await user.matchPassword(currentPassword))) {
-    res.status(401);
-    throw new Error("Current password is incorrect");
-  }
-
-  user.password = newPassword; // pre-save hook hashes
-  await user.save();
+  const body = { password: req.body?.newPassword, currentPassword: req.body?.currentPassword, reason: req.body?.reason, operationId: req.body?.operationId };
+  body.reason ??= "Self-service password change";
+  if (typeof body.password !== "string" || !body.password || typeof body.currentPassword !== "string" || !body.currentPassword) { res.status(400); throw new Error("Current and new password are required"); }
+  await updateAccount(req.user, req.user.id, body, { self: true, action: "account.password_changed" });
   res.json({ message: "Password updated" });
 });
 
@@ -176,7 +109,7 @@ export const getUsers = asyncHandler(async (req, res) => {
   ]);
 
   res.json({
-    users,
+    users: users.map(user => ({ ...publicAccount(user), securityVersion: user.tokenVersion ?? 0 })),
     total,
     page: pageNum,
     totalPages: Math.ceil(total / limitNum),
@@ -185,45 +118,20 @@ export const getUsers = asyncHandler(async (req, res) => {
 
 // PUT /api/users/:id
 export const updateUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
-  if (!user) {
-    res.status(404);
-    throw new Error("User not found");
+  if (!canonicalAccountId(req.params.id)) { res.status(400); throw new Error("Invalid account ID"); }
+  if (["role", "confirmed", "password"].some(field => req.body?.[field] !== undefined) && !Number.isSafeInteger(req.body?.expectedVersion)) {
+    res.status(400); throw new Error("Expected account version required");
   }
-
-  const { identifier, role, confirmed, name, phone, address, password } =
-    req.body;
-
-  if (identifier !== undefined)
-    user.identifier = identifier.toLowerCase().trim();
-  if (role !== undefined) user.role = role;
-  if (confirmed !== undefined) user.confirmed = confirmed;
-  if (name !== undefined) user.name = name;
-  if (phone !== undefined) user.phone = phone;
-  if (address !== undefined) user.address = address;
-  if (password) {
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(password, salt);
-  }
-  const updated = await user.save();
-  const result = updated.toObject();
-  delete result.password;
-  res.json(result);
+  if (req.body?.accountState !== undefined) { res.status(400); throw new Error("Use the lifecycle command"); }
+  const body = Object.fromEntries(["identifier", "role", "confirmed", "name", "phone", "address", "password", "reason", "operationId", "expectedVersion", "reviewId"].filter(field => req.body?.[field] !== undefined).map(field => [field, req.body[field]]));
+  const result = await updateAccount(req.user, req.params.id, body);
+  res.json({ ...result.account, operationId: result.operationId });
 });
 
 // DELETE /api/users/:id
 export const deleteUser = asyncHandler(async (req, res) => {
-  if (req.params.id === req.user._id) {
-    res.status(400);
-    throw new Error("Cannot delete your own account");
-  }
-
-  const user = await User.findById(req.params.id);
-  if (!user) {
-    res.status(404);
-    throw new Error("User not found");
-  }
-
-  await user.deleteOne();
-  res.json({ message: "User deleted" });
+  const target = canonicalAccountId(req.params.id);
+  if (!target) { res.status(400); throw new Error("Invalid account ID"); }
+  if (target === canonicalAccountId(req.user?.id)) { res.status(400); throw new Error("Cannot delete your own account"); }
+  res.json(await deleteAccount(req.user, target, req.body || {}));
 });

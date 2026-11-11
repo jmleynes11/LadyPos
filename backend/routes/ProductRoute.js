@@ -1,3 +1,6 @@
+import { accountOperation } from "../middleware/accountOperation.js";
+import { requireLegacyOperationalAccess } from "../middleware/roleAdmission.js";
+import { requireInventoryAdjustmentAccess, requireProductReadAccess, requireProductCreationAccess, requireProductManagementAccess } from "../middleware/bookstoreAdmission.js";
 import { Router } from "express";
 import {
   createProduct,
@@ -17,16 +20,16 @@ router.use(protect);
 
 router
   .route("/")
-  .post(authorizeRoles("admin", "user"), createProduct)
-  .get(authorizeRoles("admin", "user"), getProducts);
+  .post(authorizeRoles("admin", "user", "store_manager"), requireProductCreationAccess, createProduct)
+  .get(requireProductReadAccess, accountOperation(getProducts));
 
 router
   .route("/:id")
-  .get(authorizeRoles("admin", "user"), getProductById)
-  .put(authorizeRoles("admin", "user"), updateProduct)
-  .delete(authorizeRoles("admin", "user"), deleteProduct);
+  .get(requireProductReadAccess, accountOperation(getProductById))
+  .put(authorizeRoles("admin", "user", "store_manager"), requireProductManagementAccess, updateProduct)
+  .delete(authorizeRoles("admin", "user", "store_manager"), requireProductManagementAccess, deleteProduct);
 
-router.patch("/:id/stock", authorizeRoles("admin", "user"), adjustStock);
-router.post("/set-active", protect, setActiveProducts);
+router.patch("/:id/stock", requireInventoryAdjustmentAccess, adjustStock);
+router.post("/set-active", protect, requireLegacyOperationalAccess, setActiveProducts);
 
 export default router;

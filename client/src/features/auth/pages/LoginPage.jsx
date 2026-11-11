@@ -1,121 +1,18 @@
-// src/features/auth/pages/LoginPage.jsx
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../shared/hooks/AuthContext.jsx";
-import { useNavigate } from "react-router-dom";
-import ClickTooltip from "../../../shared/hooks/ClickTooltip.jsx";
+import { Brand, Icon, Notice } from "../../../shared/components/BookstoreUI.jsx";
+import { bookstoreLandingPath } from "../../bookstore/navigation.js";
 
-function LoginPage() {
+export default function LoginPage() {
   const { login, isLoading, error } = useAuth();
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
-
-  const [showPassword, setShowPassword] = useState(false);
+  const [identifier, setIdentifier] = useState(""), [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false), [showPassword, setShowPassword] = useState(false), [failure, setFailure] = useState("");
   const navigate = useNavigate();
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!identifier || !password) {
-      alert("Please enter both identifier and password");
-      return;
-    }
-    const success = await login({ identifier, password, remember });
-    setShowPassword(false);
-
-    if (success) navigate("/pos");
+  const submit = async event => {
+    event.preventDefault(); setFailure("");
+    try { const success = await login({ identifier, password, remember }); setShowPassword(false); if (success) navigate(bookstoreLandingPath(success)); }
+    catch (err) { setFailure(err.message || "Sign in unavailable"); }
   };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-app px-4">
-      <div className="w-full max-w-sm bg-surface rounded-3xl shadow-soft p-6">
-        {/* Logo / Branding */}
-        <div className="text-center mb-6">
-          <img
-            src="/serveflow.svg"
-            alt="ServeFlow Logo"
-            className="mx-auto mb-4 w-44 h-44"
-          />
-          <h1 className="text-2xl font-bold text-primary">ServeFlow</h1>
-          <p className="text-sm text-muted">Welcome back, ready to serve?</p>
-        </div>
-
-        {/* Form */}
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          {/* Identifier */}
-          <div>
-            <label className="text-sm text-muted">Username or Email</label>
-            <input
-              type="text"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="Enter your identifier"
-              className="w-full mt-1 p-3 rounded-xl border border-default bg-surface text-(--color-text) focus:outline-none focus:ring-2 focus:ring-(--color-secondary)"
-            />
-          </div>
-
-          {/* Password */}
-          <div>
-            <label className="text-sm text-muted">Password</label>
-
-            <div className="relative mt-1">
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="w-full p-3 pr-12 rounded-xl border border-default bg-surface text-(--color-text) focus:outline-none focus:ring-2 focus:ring-(--color-secondary)"
-              />
-
-              {/* Eye Button */}
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition"
-              >
-                {showPassword ? "🙈" : "👁️"}
-              </button>
-            </div>
-          </div>
-
-          {/* Remember Me */}
-          <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center gap-2 text-muted">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-                className="accent-(--color-accent)"
-              />
-              Remember me
-            </label>
-
-            <button type="button" className="text-primary font-medium">
-              Forgot Password?
-            </button>
-          </div>
-
-          {/* Login Button */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-(--color-primary) text-white p-3 rounded-xl font-semibold active:scale-95 transition"
-          >
-            {isLoading ? "Logging in..." : "Login to ServeFlow"}
-          </button>
-          {error && <p className="text-red-500">{error}</p>}
-        </form>
-        {/* Footer */}
-        <p className="text-center text-sm text-muted mt-6">
-          New here?{" "}
-          <span className="relative group text-primary font-medium cursor-pointer">
-            <ClickTooltip content="Only admins can create accounts. Please contact your administrator.">
-              Create account
-            </ClickTooltip>
-          </span>
-        </p>
-      </div>
-    </div>
-  );
+  return <main className="auth-shell"><section className="auth-brand-panel"><Brand /><div className="eyebrow" style={{ color: "var(--color-accent)" }}>The official university bookstore</div><h1>Everything you need.<br /><span>Ready for your<br />next chapter.</span></h1><p>Point-of-Sale and Inventory Management System for the University Bookstore.</p><div className="auth-brand-footer"><Icon name="shield" />University of Perpetual Help System DALTA</div></section><section className="auth-form-panel"><div className="auth-form"><div className="eyebrow">UPHSD BOOKSTORE POS</div><h2>Welcome back</h2><p>Sign in to your assigned bookstore workspace.</p>{(failure || error) && <Notice error>{failure || error}</Notice>}<form onSubmit={submit}><label htmlFor="identifier">Username or email<input id="identifier" className="input" autoComplete="username" value={identifier} onChange={event => setIdentifier(event.target.value)} placeholder="Enter your username" required /></label><label htmlFor="password">Password<div className="password-field"><input id="password" className="input" autoComplete="current-password" type={showPassword ? "text" : "password"} value={password} onChange={event => setPassword(event.target.value)} placeholder="Enter your password" required /><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(value => !value)}>{showPassword ? "Hide" : "Show"}</button></div></label><label className="checkbox-row"><input type="checkbox" checked={remember} onChange={event => setRemember(event.target.checked)} />Remember me on this device</label><button className="primary-action" disabled={isLoading}>{isLoading ? "Signing in…" : "Sign in"}<Icon name="arrow" size={17} /></button></form><p className="helper-text">Account access and password resets are managed by your Administrator.</p><div className="auth-divider"><span>Shopping at the bookstore</span></div><Link className="auth-guest" to="/kiosk"><Icon name="bag" size={25} /><div>Continue as a guest<small>Browse and order. No account required.</small></div><Icon name="arrow" size={17} /></Link></div></section></main>;
 }
-
-export default LoginPage;

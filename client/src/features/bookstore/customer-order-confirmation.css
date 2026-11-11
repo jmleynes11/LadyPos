@@ -1,0 +1,20 @@
+/* Customer confirmation only; guest and staff presentation is unchanged. */
+.customer-store .customer-order-confirmation { max-width: 900px; margin: 20px auto 24px; padding: 36px; background: #fff; border: 1px solid #e8ded8; border-radius: 16px; box-shadow: 0 4px 18px #4d190005; }
+.customer-store .customer-order-confirmation .panel-heading { margin-bottom: 12px; }
+.customer-store .customer-order-confirmation .panel-heading h2 { color: #7c0000; font-size: 20px; font-weight: 700; letter-spacing: .02em; }
+.customer-store .customer-order-confirmation .customer-confirmation-message { margin: 0 0 30px; }
+.customer-store .customer-order-confirmation .eyebrow { color: #7c0000; margin-bottom: 12px; }
+.customer-store .customer-reference-row { display: flex; align-items: center; gap: 16px; }
+.customer-store .customer-order-reference { min-width: 0; color: #7c0000; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: clamp(22px, 3vw, 40px); font-weight: 700; line-height: 1.35; letter-spacing: .025em; overflow-wrap: anywhere; }
+.customer-store .customer-copy-reference { flex-shrink: 0; color: #7c0000; background: #fffaf0; border-color: #e6c574; min-height: 42px; }
+.customer-store .customer-copy-reference:hover { background: #fff2cd; border-color: #ffb603; }
+.customer-store .customer-order-confirmation .customer-copy-feedback { min-height: 20px; margin: 7px 0 0; color: #7c0000; }
+.customer-store .customer-order-confirmation .customer-reference-reminder { margin: 0 0 24px; }
+.customer-store .customer-order-confirmation .status-pill.pending { display: inline-flex; white-space: normal; color: #765400; background: #fff8e4; border-color: #f0d98d; padding: 8px 12px; }
+@media (max-width: 640px) {
+  .customer-store .customer-order-confirmation { margin-top: 8px; padding: 24px 20px; border-radius: 12px; }
+  .customer-store .customer-order-confirmation .panel-heading h2 { font-size: 18px; }
+  .customer-store .customer-reference-row { gap: 10px; }
+  .customer-store .customer-order-reference { font-size: 20px; }
+  .customer-store .customer-copy-reference { padding: 9px 12px; }
+}

@@ -1,0 +1,15 @@
+{
+  "declaredModels": 23,
+  "distinctCollectionMappings": 23,
+  "appLoadedModels": 22,
+  "definitionOnlyModels": [
+    "Financial"
+  ],
+  "schemaPathsVerifiedInBothTables": 304,
+  "diagramEntities": 23,
+  "diagramRelationships": 48,
+  "sourceFilesUnchanged": 92,
+  "connectionReadyState": 0,
+  "diagramValidation": "Structural checks only; no Mermaid renderer/parser installed",
+  "productionDatabaseAccess": false
+}

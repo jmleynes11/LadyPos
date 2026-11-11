@@ -15,7 +15,7 @@ export const getSummary = async (req, res) => {
   try {
     const owner = new mongoose.Types.ObjectId(ownerIdFrom(req));
     const [transactionTotals] = await Transaction.aggregate([
-      { $match: { owner, orderStatus: "completed", voidedAt: { $exists: false } } },
+      { $match: { owner, origin: { $exists: false }, orderStatus: "completed", voidedAt: { $exists: false } } },
       {
         $group: {
           _id: null,
@@ -32,7 +32,7 @@ export const getSummary = async (req, res) => {
 
     const [totalCustomers, recentTransactions] = await Promise.all([
       Customer.countDocuments({ owner, isDeleted: { $ne: true } }),
-      Transaction.find({ owner, orderStatus: "completed", voidedAt: { $exists: false } })
+      Transaction.find({ owner, origin: { $exists: false }, orderStatus: "completed", voidedAt: { $exists: false } })
         .populate("customer", "name phone")
         .sort({ createdAt: -1 })
         .limit(10),
@@ -61,6 +61,7 @@ export const getRevenueByRange = async (req, res) => {
       {
         $match: {
           owner,
+          origin: { $exists: false },
           orderStatus: "completed",
           voidedAt: { $exists: false },
           createdAt: { $gte: from, $lte: to },

@@ -1,3 +1,6 @@
+import { accountOperation } from "../middleware/accountOperation.js";
+import { requireLegacyOperationalAccess } from "../middleware/roleAdmission.js";
+import { requireReversalAliasAccess } from "../middleware/bookstoreAdmission.js";
 import express from "express";
 import {
   createInvoiceFromOrder,
@@ -11,11 +14,11 @@ import { protect } from "../middleware/authMiddleware.js";
 const router = express.Router();
 router.use(protect);
 
-router.post("/create/:orderId", createInvoiceFromOrder);
-router.get("/", getInvoices);
-router.get("/order/:orderId/ensure", getOrCreateInvoice);
-router.get("/transaction/:transactionId/ensure", getOrCreateInvoice);
-router.get("/:id", getInvoiceById);
-router.patch("/:id/void", markVoid);
+router.post("/create/:orderId", requireLegacyOperationalAccess, accountOperation(createInvoiceFromOrder));
+router.get("/", requireLegacyOperationalAccess, accountOperation(getInvoices));
+router.get("/order/:orderId/ensure", requireLegacyOperationalAccess, accountOperation(getOrCreateInvoice));
+router.get("/transaction/:transactionId/ensure", requireLegacyOperationalAccess, accountOperation(getOrCreateInvoice));
+router.get("/:id", requireLegacyOperationalAccess, accountOperation(getInvoiceById));
+router.patch("/:id/void", requireReversalAliasAccess, markVoid);
 
 export default router;

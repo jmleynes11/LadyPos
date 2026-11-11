@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { logClientError } from "../../../shared/utils/safeDiagnostics.js";
 
 export default function DebtForm({ onSubmit, isPayment }) {
   const [form, setForm] = useState({ amount: "", notes: "" });
@@ -30,7 +31,7 @@ export default function DebtForm({ onSubmit, isPayment }) {
       // ✅ Reset after success
       setForm({ amount: "", notes: "" });
     } catch (err) {
-      console.error("Submit failed:", err);
+      logClientError("people.transaction_failed", err);
       alert("Something went wrong while saving");
     } finally {
       setLoading(false);

@@ -1,0 +1,11 @@
+✔ pending M uniform still quotes and completes after Clothing is renamed to Uniforms (206.1314ms)
+✔ saleable M return survives rename and preserves historical sale and exact inventory (144.1678ms)
+✔ saleable M return survives remove and preserves historical sale and exact inventory (105.9764ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1829.7258

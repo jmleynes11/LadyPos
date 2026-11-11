@@ -1,0 +1,17 @@
+{
+  "environment": "disposable in-memory fixture; no production database",
+  "checkoutId": "6aed3d835365d9b80faf9d6d",
+  "storeId": "6aed3d3d5365d9b80faf9d66",
+  "directPayment": true,
+  "orderStatus": "pending",
+  "checkoutSubmissionEvents": 1,
+  "stockBeforePayment": 10,
+  "paymentReviewTotal": 15050,
+  "guestOrderId": "6aed3dd25365d9b80faf9d70",
+  "studentOrderId": "6aed3dd25365d9b80faf9d76",
+  "queueOrderIds": [
+    "6aed3dd25365d9b80faf9d70",
+    "6aed3dd25365d9b80faf9d76"
+  ],
+  "cashierCheckoutInQueue": false
+}

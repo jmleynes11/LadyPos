@@ -14,7 +14,7 @@ const emptyForm = {
   isActive: true,
 };
 
-export default function ProductPage() {
+export default function ProductPage({ readOnly = false }) {
   const { getProducts, createProduct, updateProduct, deleteProduct } =
     useProductApi();
   const [products, setProducts] = useState([]);
@@ -72,9 +72,9 @@ export default function ProductPage() {
     <div className="screen-wrap">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">Products</h1>
-        <button className="secondary-action" onClick={() => startEdit(null)}>
+        {!readOnly && <button className="secondary-action" onClick={() => startEdit(null)}>
           Add
-        </button>
+        </button>}
       </div>
 
       <input
@@ -84,7 +84,7 @@ export default function ProductPage() {
         onChange={(event) => setSearch(event.target.value)}
       />
 
-      <form className="inline-form" onSubmit={save}>
+      {!readOnly && <form className="inline-form" onSubmit={save}>
         <div className="grid gap-2 md:grid-cols-2">
           <div className="floating-field">
             <input
@@ -187,7 +187,7 @@ export default function ProductPage() {
         >
           {editingProduct ? "Save changes" : "Create product"}
         </button>
-      </form>
+      </form>}
 
       <div
         className="mt-4 divide-y rounded-lg border"
@@ -209,7 +209,7 @@ export default function ProductPage() {
               >
                 {stock}
               </span>
-              <div className="flex gap-2">
+              {!readOnly && <div className="flex gap-2">
                 <button
                   className="mini-action"
                   onClick={() => startEdit(product)}
@@ -225,7 +225,7 @@ export default function ProductPage() {
                 >
                   Off
                 </button>
-              </div>
+              </div>}
             </div>
           );
         })}

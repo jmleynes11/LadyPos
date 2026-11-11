@@ -7,7 +7,9 @@ const EMPTY = {
   name: "",
   phone: "",
   address: "",
-  role: "user",
+  role: "",
+  reason: "",
+  reviewId: "",
   confirmed: false,
 };
 
@@ -24,7 +26,7 @@ export function UserModal({
 
   useEffect(() => {
     if (open) {
-      setForm(initialData ? { ...EMPTY, ...initialData, password: "" } : EMPTY);
+      setForm({ ...EMPTY, ...initialData, password: "", operationId: crypto.randomUUID() });
     }
   }, [open, initialData]);
 
@@ -129,8 +131,12 @@ export function UserModal({
               onChange={set("role")}
               disabled={loading}
             >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
+              <option value="">Select approved role</option>
+              {initialData?.role === "user" && <option value="user">Legacy user — awaiting review</option>}
+              <option value="admin">Administrator</option>
+              <option value="store_manager">Store Manager</option>
+              <option value="cashier">Cashier</option>
+              <option value="customer">Customer / Student</option>
             </select>
           </FormField>
 
@@ -139,11 +145,19 @@ export function UserModal({
               type="checkbox"
               checked={form.confirmed}
               onChange={set("confirmed")}
-              disabled={loading}
+              disabled={loading || !isEdit}
               className="w-4 h-4"
             />
             Confirmed
           </label>
+          <FormField label="Reason for account change *" error={errors.reason}>
+            <input className="input w-full" value={form.reason} onChange={set("reason")} disabled={loading} />
+          </FormField>
+          {initialData?.role === "user" && form.role !== "user" && (
+            <FormField label="Approved review ID *" error={errors.reviewId}>
+              <input className="input w-full" value={form.reviewId} onChange={set("reviewId")} disabled={loading} />
+            </FormField>
+          )}
         </div>
 
         <div

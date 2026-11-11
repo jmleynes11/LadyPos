@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { addStoreAttribution } from "./resourceAttribution.js";
 
 const { Schema, model } = mongoose;
 
@@ -46,4 +47,5 @@ customerSchema.virtual("totalOrders").get(function getTotalOrders() {
 customerSchema.index({ owner: 1, name: 1 });
 customerSchema.index({ owner: 1, phone: 1 });
 
+addStoreAttribution(customerSchema);
 export default model("Customer", customerSchema);

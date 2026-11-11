@@ -1,5 +1,7 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { clearSessionPreservingPending } from "../../features/bookstore/pendingOperation.js";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { loginUser } from "../../features/auth/api/authApi";
+import { logClientError } from "../utils/safeDiagnostics.js";
 
 const AuthContext = createContext(null);
 
@@ -9,33 +11,39 @@ export function AuthProvider({ children }) {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 🔥 central setter (fixes your bug)
-  const setUser = (userData) => {
-    setUserState(userData);
-
-    if (userData) {
-      localStorage.setItem("user", JSON.stringify(userData));
-    } else {
-      localStorage.removeItem("user");
+  const clearCredentials = () => {
+    for (const storage of [localStorage, sessionStorage]) {
+      storage.removeItem("user");
+      storage.removeItem("jwt");
     }
   };
 
+  const setUser = (userData) => {
+    setUserState(userData);
+    if (!userData) { clearCredentials(); setJwt(null); return; }
+    // Profile edits retain the persistence selected by the successful login.
+    const storage = sessionStorage.getItem("jwt") === jwt ? sessionStorage : localStorage;
+    if (jwt) storage.setItem("user", JSON.stringify(userData));
+  };
+
   useEffect(() => {
-    const storedUser =
-      localStorage.getItem("user") || sessionStorage.getItem("user");
-
-    const storedJwt =
-      localStorage.getItem("jwt") || sessionStorage.getItem("jwt");
-
-    if (storedJwt && storedUser && storedUser !== "undefined") {
+    // Read a complete pair from one location. Session takes precedence for
+    // compatibility with older clients that left persistent credentials behind.
+    for (const storage of [sessionStorage, localStorage]) {
       try {
-        const parsedUser = JSON.parse(storedUser);
-
+        const storedUser = storage.getItem("user"), storedJwt = storage.getItem("jwt");
+        const parsedUser = storedUser && JSON.parse(storedUser);
+        if (!storedJwt || !parsedUser || typeof parsedUser !== "object" || !parsedUser._id) {
+          storage.removeItem("user"); storage.removeItem("jwt"); continue;
+        }
+        const other = storage === sessionStorage ? localStorage : sessionStorage;
+        other.removeItem("user"); other.removeItem("jwt");
         setJwt(storedJwt);
         setUserState(parsedUser);
+        break;
       } catch (err) {
-        console.error("Invalid user in localStorage:", storedUser);
-        localStorage.removeItem("user");
+        logClientError("auth.storage_invalid", err);
+        storage.removeItem("user"); storage.removeItem("jwt");
       }
     }
 
@@ -44,6 +52,7 @@ export function AuthProvider({ children }) {
 
   const login = async ({ identifier, password, remember }) => {
     setIsLoading(true);
+    setError(null);
 
     try {
       const data = await loginUser({ identifier, password });
@@ -58,9 +67,7 @@ export function AuthProvider({ children }) {
         address: data.address,
       };
 
-      setJwt(data.token);
-      setUser(userData);
-
+      clearCredentials();
       if (remember) {
         localStorage.setItem("user", JSON.stringify(userData));
         localStorage.setItem("jwt", data.token);
@@ -68,12 +75,14 @@ export function AuthProvider({ children }) {
         sessionStorage.setItem("user", JSON.stringify(userData));
         sessionStorage.setItem("jwt", data.token);
       }
+      setJwt(data.token);
+      setUserState(userData);
       return data;
     } catch (err) {
       setJwt(null);
-      setUser(null);
+      setUserState(null);
+      clearCredentials();
       setError(err.response?.data?.message || "Login failed");
-      localStorage.clear();
 
       throw new Error(err.response?.data?.message || "Login failed");
     } finally {
@@ -81,18 +90,18 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.clear();
-    sessionStorage.clear();
+    clearSessionPreservingPending(sessionStorage);
     setJwt(null);
-    setUser(null);
-  };
+    setUserState(null);
+  }, []);
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        setUser, // 🔥 THIS FIXES YOUR EDIT ISSUE
+        setUser,
         jwt,
         isAuthenticated: !!user,
         isLoading,

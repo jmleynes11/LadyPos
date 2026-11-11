@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
+import { addStoreAttribution } from "./resourceAttribution.js";
 import Invoice from "./Invoice.js";
+import { CLOTHING_SIZES } from "../utils/clothingSizes.js";
 
 const { Schema, model } = mongoose;
 
@@ -8,6 +10,8 @@ const transactionItemSchema = new Schema(
     product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
     quantity: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true, min: 0 },
+    name: String, sku: String, category: String,
+    size: { type: String, enum: CLOTHING_SIZES, default: undefined },
     subtotal: { type: Number, required: true, min: 0 },
   },
   {
@@ -45,7 +49,7 @@ const transactionSchema = new Schema(
     balance: { type: Number, default: 0, min: 0 },
     paymentStatus: {
       type: String,
-      enum: ["paid", "partial", "debt"],
+      enum: ["paid", "partial", "debt", "unpaid"],
       default: "debt",
       index: true,
     },
@@ -63,13 +67,20 @@ const transactionSchema = new Schema(
     reference: { type: String, default: "", trim: true },
     orderStatus: {
       type: String,
-      enum: ["pending", "completed", "void"],
+      enum: ["pending", "completed", "void", "cancelled"],
       default: "completed",
       index: true,
     },
     ledgerRecorded: { type: Boolean, default: false, index: true },
     completedAt: Date,
     processedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    origin: { type: String, enum: ["guest", "student", "pos"] },
+    directPayment: { type: Boolean, default: undefined },
+    studentUser: { type: Schema.Types.ObjectId, ref: "User", select: false },
+    assignedTo: { type: Schema.Types.ObjectId, ref: "User" },
+    bookstoreReference: { type: String },
+    cancelledAt: Date, cancelledBy: Schema.Types.ObjectId, cancellationReason: String,
+    reversalId: Schema.Types.ObjectId, reversedAt: Date,
     notes: { type: String, default: "" },
     voidedAt: Date,
     voidReason: String,
@@ -153,4 +164,6 @@ transactionSchema.index({
 });
 transactionSchema.index({ owner: 1, createdAt: -1 });
 
+addStoreAttribution(transactionSchema);
+transactionSchema.index({ bookstoreReference: 1 }, { unique: true, sparse: true });
 export default model("Transaction", transactionSchema);

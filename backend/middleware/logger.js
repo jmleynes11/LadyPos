@@ -3,12 +3,12 @@ export function logger(req, res, next) {
 
   res.on("finish", () => {
     console.log(
-      `[${now}] ${req.method} ${req.url} ${res.statusCode} ${res.statusMessage}`,
+      `[${now}] ${req.method} ${req.baseUrl || ""}${req.route?.path || "<unmatched>"} ${res.statusCode}`,
     );
   });
 
-  res.on("error", (err) => {
-    console.error(`[${now}] ERROR: ${req.method} ${req.url}`, err);
+  res.on("error", () => {
+    console.error(`[${now}] Request response error`);
   });
 
   next();

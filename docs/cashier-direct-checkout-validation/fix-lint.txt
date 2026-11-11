@@ -1,0 +1,1 @@
+PASS: changed frontend files have no lint errors or warnings.

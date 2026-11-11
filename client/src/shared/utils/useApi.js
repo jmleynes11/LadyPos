@@ -7,7 +7,7 @@ export function useApi() {
 
   const api = useMemo(() => {
     return createApiClient(jwt, logout);
-  }, [jwt]);
+  }, [jwt, logout]);
 
   return api;
 }

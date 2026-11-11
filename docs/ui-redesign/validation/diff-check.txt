@@ -1,0 +1,13 @@
+warning: in the working copy of 'backend/index.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/utils/seedAdmin.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/features/auth/pages/LoginPage.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/features/auth/pages/RegisterPage.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/features/financials/components/FinanceChart.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/features/financials/pages/ExpensePage.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/features/invoices/components/Invoice.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/features/orders/components/UpdateOrderModal.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/features/people/components/PersonCard.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/features/products/components/ProductCard.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/index.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/shared/components/Layout.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/shared/hooks/AuthContext.jsx', LF will be replaced by CRLF the next time Git touches it

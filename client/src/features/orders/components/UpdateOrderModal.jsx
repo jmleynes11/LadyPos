@@ -220,7 +220,7 @@ export default function UpdateOrderModal({ order, onClose, onSuccess }) {
                     <button
                       onClick={handleDelete}
                       className="block w-full text-left p-2"
-                      style={{ color: "#ef4444" }}
+                      style={{ color: "var(--color-danger)" }}
                     >
                       🗑 Delete
                     </button>
@@ -380,8 +380,8 @@ export default function UpdateOrderModal({ order, onClose, onSuccess }) {
                   onClick={handleDelete}
                   className="flex-1 py-2 rounded border"
                   style={{
-                    borderColor: "#ef4444",
-                    color: "#ef4444",
+                    borderColor: "var(--color-danger)",
+                    color: "var(--color-danger)",
                   }}
                 >
                   🗑 Delete

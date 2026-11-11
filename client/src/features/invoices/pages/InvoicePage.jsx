@@ -7,6 +7,16 @@ export default function InvoicesPage() {
 
   const [invoices, setInvoices] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [error, setError] = useState("");
+  const loadInvoices = async (params = {}) => {
+    try {
+      const res = await getInvoices(params);
+      setInvoices(res.data);
+      setError("");
+    } catch {
+      setError("Unable to load invoices.");
+    }
+  };
   useEffect(() => {
     if (selected) {
       requestAnimationFrame(() => {
@@ -20,14 +30,15 @@ export default function InvoicesPage() {
     loadInvoices();
   }, []);
 
-  const loadInvoices = async () => {
-    const res = await getInvoices();
-    setInvoices(res.data);
-  };
-
   const handlePrint = async (orderId) => {
-    const res = await ensureInvoice(orderId);
-    setSelected(res.data);
+    try {
+      const res = await ensureInvoice(orderId);
+      if (!Array.isArray(res.data?.items)) throw new Error("Receipt data unavailable");
+      setSelected(res.data);
+      setError("");
+    } catch {
+      setError("Unable to prepare receipt.");
+    }
   };
 
   return (
@@ -40,6 +51,7 @@ export default function InvoicesPage() {
       }}
     >
       <h1 className="text-xl font-bold">Invoices</h1>
+      {error && <p role="alert">{error}</p>}
 
       {/* FILTERS */}
       <div
@@ -60,7 +72,10 @@ export default function InvoicesPage() {
           className="input"
         >
           <option value="">All</option>
-          <option value="completed">Completed</option>
+          <option value="paid">Paid</option>
+          <option value="partial">Partial</option>
+          <option value="unpaid">Unpaid</option>
+          <option value="void">Void</option>
         </select>
       </div>
 
@@ -79,7 +94,7 @@ export default function InvoicesPage() {
               <p className="font-bold">{inv.invoiceNumber}</p>
 
               <p className="text-sm" style={{ color: "var(--color-muted)" }}>
-                ₱ {inv.total}
+                {typeof inv.total === "number" ? `PHP ${(inv.total / 100).toFixed(2)}` : "Total unavailable"}
               </p>
 
               <p className="text-xs" style={{ color: "var(--color-muted)" }}>

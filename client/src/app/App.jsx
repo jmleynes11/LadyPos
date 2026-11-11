@@ -7,12 +7,14 @@ import DashboardGuard from "../shared/hooks/DashboardGuard.jsx";
 import ProfilePage from "../features/auth/pages/ProfilePage.jsx";
 import PersonsPage from "../features/people/pages/PersonPage.jsx";
 import ProductPage from "../features/products/pages/ProductPage.jsx";
-import POSPage from "../features/orders/pages/PosPage.jsx";
+import BookstorePage from "../features/bookstore/BookstorePage.jsx";
+import KioskPage from "../features/kiosk/KioskPage.jsx";
+import { BookstoreProvider } from "../features/bookstore/BookstoreContext.jsx";
+import LegacyBoundary from "../features/bookstore/LegacyBoundary.jsx";
 import OrdersPage from "../features/orders/pages/OrdersPage.jsx";
 import FinancialPage from "../features/financials/pages/FinancialPage.jsx";
 import InvoicesPage from "../features/invoices/pages/InvoicePage.jsx";
 import ExpensePage from "../features/financials/pages/ExpensePage.jsx";
-import { LoadingScreen } from "../shared/components/LoadingScreen.jsx";
 import { useServerReady } from "../shared/utils/useServerReady.js";
 import { Toaster } from "react-hot-toast";
 
@@ -29,55 +31,57 @@ const router = createBrowserRouter([
     path: "/register",
     element: <RegisterPage />,
   },
+  { path: "/kiosk", element: <KioskPage /> },
   {
     element: <DashboardGuard />,
     children: [
       {
-        element: <Layout />, // 👈 shared layout
+        element: <BookstoreProvider><Layout /></BookstoreProvider>,
         children: [
+          { path: "/bookstore", element: <BookstorePage /> },
           {
             path: "/profile",
             element: <ProfilePage />,
           },
           {
             path: "/customers",
-            element: <PersonsPage />,
+            element: <LegacyBoundary><PersonsPage readOnly /></LegacyBoundary>,
           },
           {
             path: "/customers/:id",
-            element: <PersonsPage />,
+            element: <LegacyBoundary><PersonsPage readOnly /></LegacyBoundary>,
           },
           {
             path: "/orders",
-            element: <OrdersPage />,
+            element: <LegacyBoundary><OrdersPage readOnly /></LegacyBoundary>,
           },
           {
             path: "/transactions",
-            element: <OrdersPage />,
+            element: <LegacyBoundary><OrdersPage readOnly /></LegacyBoundary>,
           },
           {
             path: "/pos",
-            element: <POSPage />,
+            element: <Navigate to="/bookstore" replace />,
           },
           {
             path: "/products",
-            element: <ProductPage />,
+            element: <LegacyBoundary><ProductPage readOnly /></LegacyBoundary>,
           },
           {
             path: "/finances",
-            element: <FinancialPage />,
+            element: <LegacyBoundary><FinancialPage /></LegacyBoundary>,
           },
           {
             path: "/dashboard",
-            element: <FinancialPage />,
+            element: <LegacyBoundary><FinancialPage /></LegacyBoundary>,
           },
           {
             path: "/invoices",
-            element: <InvoicesPage />,
+            element: <LegacyBoundary><InvoicesPage /></LegacyBoundary>,
           },
           {
             path: "/expenses",
-            element: <ExpensePage />,
+            element: <LegacyBoundary><ExpensePage readOnly /></LegacyBoundary>,
           },
         ],
       },
@@ -86,11 +90,9 @@ const router = createBrowserRouter([
 ]);
 
 export default function App() {
-  const { ready } = useServerReady();
+  // Keep the server health check running without blocking the login page.
+  useServerReady();
 
-  if (!ready) {
-    return <LoadingScreen />;
-  }
   return (
     <>
       <RouterProvider router={router} />

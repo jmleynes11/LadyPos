@@ -67,5 +67,10 @@ export const adminUpdateUser = (id, payload, jwt) =>
     .put(`${API_URL}/users/${id}`, payload, authHeader(jwt))
     .then((r) => r.data);
 
-export const adminDeleteUser = (id, jwt) =>
-  axios.delete(`${API_URL}/users/${id}`, authHeader(jwt)).then((r) => r.data);
+export const adminDeleteUser = (id, jwt, command = {}) =>
+  axios.delete(`${API_URL}/users/${id}`, { ...authHeader(jwt), data: command }).then((r) => r.data);
+
+export const accountCommand = (id, action, payload, jwt) =>
+  axios.post(`${API_URL}/users/${id}/${action}`, payload, authHeader(jwt)).then(r => r.data);
+export const getAccountOperation = (operationId, jwt) =>
+  axios.get(`${API_URL}/users/operations/${operationId}`, authHeader(jwt)).then(r => r.data);

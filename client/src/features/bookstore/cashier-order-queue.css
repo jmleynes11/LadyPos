@@ -1,0 +1,4 @@
+.cashier-order-queue .cashier-queue-delete { color: #7c0000; border-color: #c9a3a3; background: #fff4f2; }
+.cashier-order-queue .cashier-queue-delete:hover { background: #ffeae5; border-color: #7c0000; }
+.cashier-order-queue .status-pill.cancelled { color: #7c0000; background: #f9eeee; border-color: #e5cccc; }
+.cashier-order-queue .table-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }

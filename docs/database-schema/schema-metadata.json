@@ -1,0 +1,3514 @@
+{
+  "auditDate": "2026-11-11",
+  "mongooseVersion": "9.3.3",
+  "connectionReadyState": 0,
+  "startupModels": [
+    "AccountAdministrationRealm",
+    "AccountAuditEvent",
+    "AccountOperationReceipt",
+    "AccountRoleReview",
+    "BookstoreAuditEvent",
+    "BookstoreOperationReceipt",
+    "BookstorePayment",
+    "BookstoreReversalRequest",
+    "BookstoreSaleReversal",
+    "BookstoreSequence",
+    "ConditionalAccountGrant",
+    "Customer",
+    "DebtPayment",
+    "Expense",
+    "GuestOrderIntent",
+    "Invoice",
+    "InvoiceCounter",
+    "Product",
+    "StockMovement",
+    "Store",
+    "Transaction",
+    "User"
+  ],
+  "models": [
+    {
+      "model": "AccountAdministrationRealm",
+      "collection": "accountadministrationrealms",
+      "loadedByApp": true,
+      "options": {
+        "strict": "throw",
+        "timestamps": "<undefined>",
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "_id",
+          "type": "String",
+          "options": {}
+        },
+        {
+          "path": "revision",
+          "type": "Number",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [],
+      "virtuals": [
+        "id"
+      ]
+    },
+    {
+      "model": "AccountAuditEvent",
+      "collection": "accountauditevents",
+      "loadedByApp": true,
+      "options": {
+        "strict": "throw",
+        "timestamps": "<undefined>",
+        "versionKey": false,
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "schemaVersion",
+          "type": "Number",
+          "options": {
+            "required": true,
+            "enum": [
+              1
+            ]
+          }
+        },
+        {
+          "path": "eventId",
+          "type": "String",
+          "options": {
+            "required": true,
+            "unique": true
+          }
+        },
+        {
+          "path": "operationId",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "sequence",
+          "type": "Number",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "actor.id",
+          "type": "ObjectId",
+          "options": {
+            "required": "function humanActorId() { return this.actor?.kind === \"account\"; }"
+          }
+        },
+        {
+          "path": "actor.role",
+          "type": "String",
+          "options": {
+            "required": "function humanActorRole() { return this.actor?.kind === \"account\"; }",
+            "enum": [
+              "admin",
+              "store_manager",
+              "cashier",
+              "customer",
+              "user"
+            ]
+          }
+        },
+        {
+          "path": "actor.kind",
+          "type": "String",
+          "options": {
+            "required": true,
+            "enum": [
+              "account",
+              "system-expiry"
+            ]
+          }
+        },
+        {
+          "path": "subjectAccountId",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "ref": "User"
+          }
+        },
+        {
+          "path": "action",
+          "type": "String",
+          "options": {
+            "required": true,
+            "enum": [
+              "account.created",
+              "account.role_assigned",
+              "account.role_changed",
+              "account.confirmation_changed",
+              "account.suspended",
+              "account.reactivated",
+              "account.password_reset",
+              "account.password_changed",
+              "account.profile_changed",
+              "account.deleted",
+              "permission.granted",
+              "permission.revoked",
+              "permission.expired",
+              "account.review_recorded",
+              "account.store_membership_changed",
+              "account.bookstore_created"
+            ]
+          }
+        },
+        {
+          "path": "occurredAt",
+          "type": "Date",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "reason",
+          "type": "String",
+          "options": {
+            "required": true,
+            "maxlength": 1024,
+            "set": "function redactAuditText(value) {\n  return redactSensitive(value)\n    .replace(/\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{20,}/g, \"[REDACTED HASH]\")\n    .replace(/\\beyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\b/g, \"[REDACTED TOKEN]\")\n    .replace(/\\b(password|passwd|pwd|secret|(?:access[_-]?)?token|authorization|api[_-]?key)\\s*[:=]\\s*(?:\"[^\"]*\"|'[^']*'|[^\\s,;]+)/gi, \"$1=[REDACTED]\");\n}"
+          }
+        },
+        {
+          "path": "before",
+          "type": "Mixed",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "after",
+          "type": "Mixed",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "scope",
+          "type": "Mixed",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "approvalRef",
+          "type": "String",
+          "options": {}
+        },
+        {
+          "path": "reviewId",
+          "type": "ObjectId",
+          "options": {}
+        },
+        {
+          "path": "grantId",
+          "type": "ObjectId",
+          "options": {}
+        },
+        {
+          "path": "securityVersionBefore",
+          "type": "Number",
+          "options": {}
+        },
+        {
+          "path": "securityVersionAfter",
+          "type": "Number",
+          "options": {}
+        },
+        {
+          "path": "outcome",
+          "type": "String",
+          "options": {
+            "required": true,
+            "enum": [
+              "applied",
+              "observed-expired"
+            ]
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        }
+      ],
+      "indexes": [
+        [
+          {
+            "eventId": 1
+          },
+          {
+            "unique": true
+          }
+        ],
+        [
+          {
+            "operationId": 1,
+            "sequence": 1
+          },
+          {
+            "unique": true
+          }
+        ],
+        [
+          {
+            "subjectAccountId": 1,
+            "occurredAt": -1
+          },
+          {}
+        ]
+      ],
+      "virtuals": [
+        "id"
+      ]
+    },
+    {
+      "model": "AccountOperationReceipt",
+      "collection": "accountoperationreceipts",
+      "loadedByApp": true,
+      "options": {
+        "strict": "throw",
+        "timestamps": true,
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "operationId",
+          "type": "String",
+          "options": {
+            "required": true,
+            "unique": true
+          }
+        },
+        {
+          "path": "actorId",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "ref": "User"
+          }
+        },
+        {
+          "path": "targetId",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "ref": "User"
+          }
+        },
+        {
+          "path": "fingerprint",
+          "type": "String",
+          "options": {
+            "required": true,
+            "select": false
+          }
+        },
+        {
+          "path": "result",
+          "type": "Mixed",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "createdAt",
+          "type": "Date",
+          "options": {
+            "immutable": true
+          }
+        },
+        {
+          "path": "updatedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [
+        [
+          {
+            "operationId": 1
+          },
+          {
+            "unique": true
+          }
+        ]
+      ],
+      "virtuals": [
+        "id"
+      ]
+    },
+    {
+      "model": "AccountRoleReview",
+      "collection": "accountrolereviews",
+      "loadedByApp": true,
+      "options": {
+        "strict": "throw",
+        "timestamps": true,
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "targetAccountId",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "ref": "User"
+          }
+        },
+        {
+          "path": "reviewerId",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "ref": "User"
+          }
+        },
+        {
+          "path": "status",
+          "type": "String",
+          "options": {
+            "required": true,
+            "enum": [
+              "in-review",
+              "approved",
+              "rejected",
+              "applied",
+              "superseded"
+            ]
+          }
+        },
+        {
+          "path": "proposedRole",
+          "type": "String",
+          "options": {
+            "required": true,
+            "enum": [
+              "admin",
+              "store_manager",
+              "cashier",
+              "customer"
+            ]
+          }
+        },
+        {
+          "path": "expectedVersion",
+          "type": "Number",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "expectedRole",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "reason",
+          "type": "String",
+          "options": {
+            "required": true,
+            "maxlength": 1024,
+            "set": "function redactAuditText(value) {\n  return redactSensitive(value)\n    .replace(/\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{20,}/g, \"[REDACTED HASH]\")\n    .replace(/\\beyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\b/g, \"[REDACTED TOKEN]\")\n    .replace(/\\b(password|passwd|pwd|secret|(?:access[_-]?)?token|authorization|api[_-]?key)\\s*[:=]\\s*(?:\"[^\"]*\"|'[^']*'|[^\\s,;]+)/gi, \"$1=[REDACTED]\");\n}"
+          }
+        },
+        {
+          "path": "evidenceRefs",
+          "type": "Array<Mixed>",
+          "options": {
+            "required": true,
+            "set": "values => Array.isArray(values) ? values.map(redactAuditText) : values"
+          },
+          "implicitDefault": "[] (Mongoose array default)"
+        },
+        {
+          "path": "revision",
+          "type": "Number",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "supersedes",
+          "type": "ObjectId",
+          "options": {}
+        },
+        {
+          "path": "verifiedAuthorityVersion",
+          "type": "Number",
+          "options": {}
+        },
+        {
+          "path": "operationId",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "createdAt",
+          "type": "Date",
+          "options": {
+            "immutable": true
+          }
+        },
+        {
+          "path": "updatedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [],
+      "virtuals": [
+        "id"
+      ]
+    },
+    {
+      "model": "BookstoreAuditEvent",
+      "collection": "bookstoreauditevents",
+      "loadedByApp": true,
+      "options": {
+        "strict": "throw",
+        "timestamps": "<undefined>",
+        "versionKey": false,
+        "minimize": false
+      },
+      "fields": [
+        {
+          "path": "actorKey",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "operationId",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "sequence",
+          "type": "Number",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "storeId",
+          "type": "ObjectId",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "actorId",
+          "type": "ObjectId",
+          "options": {
+            "required": "function accountActorRequired() { return this.actorKind === \"account\"; }"
+          }
+        },
+        {
+          "path": "actorKind",
+          "type": "String",
+          "options": {
+            "required": true,
+            "enum": [
+              "account",
+              "guest"
+            ]
+          }
+        },
+        {
+          "path": "action",
+          "type": "String",
+          "options": {
+            "required": true,
+            "enum": [
+              "guest.intent_issued",
+              "store.created",
+              "resource.mapped",
+              "product.created",
+              "product.updated",
+              "product.price_changed",
+              "product.archived",
+              "category.created",
+              "category.renamed",
+              "category.deleted",
+              "inventory.adjusted",
+              "order.submitted",
+              "order.claimed",
+              "order.cancelled",
+              "order.queue_removed",
+              "sale.completed",
+              "payment.recorded",
+              "receipt.issued",
+              "reversal.requested",
+              "reversal.applied"
+            ]
+          }
+        },
+        {
+          "path": "targetKind",
+          "type": "String",
+          "options": {
+            "required": true,
+            "enum": [
+              "Store",
+              "Product",
+              "Transaction",
+              "Invoice",
+              "Reversal",
+              "GuestIntent",
+              "Customer",
+              "DebtPayment"
+            ]
+          }
+        },
+        {
+          "path": "targetId",
+          "type": "ObjectId",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "occurredAt",
+          "type": "Date",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "reason",
+          "type": "String",
+          "options": {
+            "required": true,
+            "set": "function redactAuditText(value) {\n  return redactSensitive(value)\n    .replace(/\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{20,}/g, \"[REDACTED HASH]\")\n    .replace(/\\beyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\b/g, \"[REDACTED TOKEN]\")\n    .replace(/\\b(password|passwd|pwd|secret|(?:access[_-]?)?token|authorization|api[_-]?key)\\s*[:=]\\s*(?:\"[^\"]*\"|'[^']*'|[^\\s,;]+)/gi, \"$1=[REDACTED]\");\n}"
+          }
+        },
+        {
+          "path": "before",
+          "type": "Mixed",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "after",
+          "type": "Mixed",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        }
+      ],
+      "indexes": [
+        [
+          {
+            "actorKey": 1,
+            "operationId": 1,
+            "sequence": 1
+          },
+          {
+            "unique": true
+          }
+        ],
+        [
+          {
+            "storeId": 1,
+            "occurredAt": -1
+          },
+          {}
+        ]
+      ],
+      "virtuals": [
+        "id"
+      ]
+    },
+    {
+      "model": "BookstoreOperationReceipt",
+      "collection": "bookstoreoperationreceipts",
+      "loadedByApp": true,
+      "options": {
+        "strict": "throw",
+        "timestamps": true,
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "actorKey",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "operationId",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "capability",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "storeId",
+          "type": "ObjectId",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "fingerprint",
+          "type": "String",
+          "options": {
+            "required": true,
+            "select": false
+          }
+        },
+        {
+          "path": "result",
+          "type": "Mixed",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "createdAt",
+          "type": "Date",
+          "options": {
+            "immutable": true
+          }
+        },
+        {
+          "path": "updatedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [
+        [
+          {
+            "actorKey": 1,
+            "operationId": 1
+          },
+          {
+            "unique": true
+          }
+        ]
+      ],
+      "virtuals": [
+        "id"
+      ]
+    },
+    {
+      "model": "BookstorePayment",
+      "collection": "bookstorepayments",
+      "loadedByApp": true,
+      "options": {
+        "strict": "throw",
+        "timestamps": "<undefined>",
+        "versionKey": false,
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "storeId",
+          "type": "ObjectId",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "transactionId",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "unique": true
+          }
+        },
+        {
+          "path": "actorId",
+          "type": "ObjectId",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "operationId",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "amount",
+          "type": "Number",
+          "options": {
+            "required": true,
+            "min": 0,
+            "validate": "function isSafeInteger() { [native code] }"
+          }
+        },
+        {
+          "path": "method",
+          "type": "String",
+          "options": {
+            "required": true,
+            "enum": [
+              "cash",
+              "gcash"
+            ]
+          }
+        },
+        {
+          "path": "reference",
+          "type": "String",
+          "options": {
+            "default": "",
+            "set": "function redactAuditText(value) {\n  return redactSensitive(value)\n    .replace(/\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{20,}/g, \"[REDACTED HASH]\")\n    .replace(/\\beyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\b/g, \"[REDACTED TOKEN]\")\n    .replace(/\\b(password|passwd|pwd|secret|(?:access[_-]?)?token|authorization|api[_-]?key)\\s*[:=]\\s*(?:\"[^\"]*\"|'[^']*'|[^\\s,;]+)/gi, \"$1=[REDACTED]\");\n}"
+          }
+        },
+        {
+          "path": "occurredAt",
+          "type": "Date",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        }
+      ],
+      "indexes": [
+        [
+          {
+            "transactionId": 1
+          },
+          {
+            "unique": true
+          }
+        ]
+      ],
+      "virtuals": [
+        "id"
+      ]
+    },
+    {
+      "model": "BookstoreReversalRequest",
+      "collection": "bookstorereversalrequests",
+      "loadedByApp": true,
+      "options": {
+        "strict": "throw",
+        "timestamps": true,
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "storeId",
+          "type": "ObjectId",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "transactionId",
+          "type": "ObjectId",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "requestedBy",
+          "type": "ObjectId",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "reason",
+          "type": "String",
+          "options": {
+            "required": true,
+            "set": "function redactAuditText(value) {\n  return redactSensitive(value)\n    .replace(/\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{20,}/g, \"[REDACTED HASH]\")\n    .replace(/\\beyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\b/g, \"[REDACTED TOKEN]\")\n    .replace(/\\b(password|passwd|pwd|secret|(?:access[_-]?)?token|authorization|api[_-]?key)\\s*[:=]\\s*(?:\"[^\"]*\"|'[^']*'|[^\\s,;]+)/gi, \"$1=[REDACTED]\");\n}"
+          }
+        },
+        {
+          "path": "status",
+          "type": "String",
+          "options": {
+            "required": true,
+            "enum": [
+              "requested",
+              "applied"
+            ]
+          }
+        },
+        {
+          "path": "approvedBy",
+          "type": "ObjectId",
+          "options": {}
+        },
+        {
+          "path": "appliedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "createdAt",
+          "type": "Date",
+          "options": {
+            "immutable": true
+          }
+        },
+        {
+          "path": "updatedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [],
+      "virtuals": [
+        "id"
+      ]
+    },
+    {
+      "model": "BookstoreSaleReversal",
+      "collection": "bookstoresalereversals",
+      "loadedByApp": true,
+      "options": {
+        "strict": "throw",
+        "timestamps": "<undefined>",
+        "versionKey": false,
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "storeId",
+          "type": "ObjectId",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "transactionId",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "unique": true
+          }
+        },
+        {
+          "path": "requestId",
+          "type": "ObjectId",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "approvedBy",
+          "type": "ObjectId",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "operationId",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "amount",
+          "type": "Number",
+          "options": {
+            "required": true,
+            "min": 0,
+            "validate": "function isSafeInteger() { [native code] }"
+          }
+        },
+        {
+          "path": "method",
+          "type": "String",
+          "options": {
+            "required": true,
+            "enum": [
+              "cash",
+              "gcash"
+            ]
+          }
+        },
+        {
+          "path": "reference",
+          "type": "String",
+          "options": {
+            "default": "",
+            "set": "function redactAuditText(value) {\n  return redactSensitive(value)\n    .replace(/\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{20,}/g, \"[REDACTED HASH]\")\n    .replace(/\\beyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\b/g, \"[REDACTED TOKEN]\")\n    .replace(/\\b(password|passwd|pwd|secret|(?:access[_-]?)?token|authorization|api[_-]?key)\\s*[:=]\\s*(?:\"[^\"]*\"|'[^']*'|[^\\s,;]+)/gi, \"$1=[REDACTED]\");\n}"
+          }
+        },
+        {
+          "path": "reason",
+          "type": "String",
+          "options": {
+            "required": true,
+            "set": "function redactAuditText(value) {\n  return redactSensitive(value)\n    .replace(/\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{20,}/g, \"[REDACTED HASH]\")\n    .replace(/\\beyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\b/g, \"[REDACTED TOKEN]\")\n    .replace(/\\b(password|passwd|pwd|secret|(?:access[_-]?)?token|authorization|api[_-]?key)\\s*[:=]\\s*(?:\"[^\"]*\"|'[^']*'|[^\\s,;]+)/gi, \"$1=[REDACTED]\");\n}"
+          }
+        },
+        {
+          "path": "returned",
+          "type": "Array<Mixed>",
+          "options": {
+            "required": true
+          },
+          "implicitDefault": "[] (Mongoose array default)"
+        },
+        {
+          "path": "occurredAt",
+          "type": "Date",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        }
+      ],
+      "indexes": [
+        [
+          {
+            "transactionId": 1
+          },
+          {
+            "unique": true
+          }
+        ]
+      ],
+      "virtuals": [
+        "id"
+      ]
+    },
+    {
+      "model": "BookstoreSequence",
+      "collection": "bookstoresequences",
+      "loadedByApp": true,
+      "options": {
+        "strict": "throw",
+        "timestamps": "<undefined>",
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "storeId",
+          "type": "ObjectId",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "year",
+          "type": "Number",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "seq",
+          "type": "Number",
+          "options": {
+            "required": true,
+            "min": 1,
+            "validate": "function isSafeInteger() { [native code] }"
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [
+        [
+          {
+            "storeId": 1,
+            "year": 1
+          },
+          {
+            "unique": true
+          }
+        ]
+      ],
+      "virtuals": [
+        "id"
+      ]
+    },
+    {
+      "model": "ConditionalAccountGrant",
+      "collection": "conditionalaccountgrants",
+      "loadedByApp": true,
+      "options": {
+        "strict": "throw",
+        "timestamps": true,
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "recipientAccountId",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "ref": "User"
+          }
+        },
+        {
+          "path": "capability",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "scope",
+          "type": "Mixed",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "grantedBy",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "ref": "User"
+          }
+        },
+        {
+          "path": "reason",
+          "type": "String",
+          "options": {
+            "required": true,
+            "maxlength": 1024,
+            "set": "function redactAuditText(value) {\n  return redactSensitive(value)\n    .replace(/\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{20,}/g, \"[REDACTED HASH]\")\n    .replace(/\\beyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\b/g, \"[REDACTED TOKEN]\")\n    .replace(/\\b(password|passwd|pwd|secret|(?:access[_-]?)?token|authorization|api[_-]?key)\\s*[:=]\\s*(?:\"[^\"]*\"|'[^']*'|[^\\s,;]+)/gi, \"$1=[REDACTED]\");\n}"
+          }
+        },
+        {
+          "path": "approvalRef",
+          "type": "String",
+          "options": {
+            "set": "function redactAuditText(value) {\n  return redactSensitive(value)\n    .replace(/\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{20,}/g, \"[REDACTED HASH]\")\n    .replace(/\\beyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\b/g, \"[REDACTED TOKEN]\")\n    .replace(/\\b(password|passwd|pwd|secret|(?:access[_-]?)?token|authorization|api[_-]?key)\\s*[:=]\\s*(?:\"[^\"]*\"|'[^']*'|[^\\s,;]+)/gi, \"$1=[REDACTED]\");\n}"
+          }
+        },
+        {
+          "path": "effectiveAt",
+          "type": "Date",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "expiresAt",
+          "type": "Date",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "recipientVersion",
+          "type": "Mixed",
+          "options": {
+            "required": true,
+            "validate": "function isTokenVersion(value) {\n  return Number.isSafeInteger(value) && value >= 0;\n}"
+          }
+        },
+        {
+          "path": "grantorAuthorityVersion",
+          "type": "Mixed",
+          "options": {
+            "required": true,
+            "validate": "function isTokenVersion(value) {\n  return Number.isSafeInteger(value) && value >= 0;\n}"
+          }
+        },
+        {
+          "path": "revokedAt",
+          "type": "Mixed",
+          "options": {
+            "default": "function newGrantRevocationState() { return this.isNew ? null : undefined; }",
+            "validate": "value => value === null || (value instanceof Date && Number.isFinite(value.valueOf()))"
+          }
+        },
+        {
+          "path": "revokedBy",
+          "type": "ObjectId",
+          "options": {}
+        },
+        {
+          "path": "revocationReason",
+          "type": "String",
+          "options": {}
+        },
+        {
+          "path": "expiredRecordedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "operationId",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "createdAt",
+          "type": "Date",
+          "options": {
+            "immutable": true
+          }
+        },
+        {
+          "path": "updatedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [
+        [
+          {
+            "recipientAccountId": 1,
+            "revokedAt": 1,
+            "expiresAt": 1
+          },
+          {}
+        ]
+      ],
+      "virtuals": [
+        "id"
+      ]
+    },
+    {
+      "model": "Customer",
+      "collection": "customers",
+      "loadedByApp": true,
+      "options": {
+        "strict": true,
+        "timestamps": {
+          "createdAt": true,
+          "updatedAt": true
+        },
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "owner",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "index": true,
+            "ref": "User"
+          }
+        },
+        {
+          "path": "name",
+          "type": "String",
+          "options": {
+            "required": true,
+            "trim": true
+          }
+        },
+        {
+          "path": "phone",
+          "type": "String",
+          "options": {
+            "default": "",
+            "trim": true
+          }
+        },
+        {
+          "path": "email",
+          "type": "String",
+          "options": {
+            "default": "",
+            "trim": true
+          }
+        },
+        {
+          "path": "address",
+          "type": "String",
+          "options": {
+            "default": "",
+            "trim": true
+          }
+        },
+        {
+          "path": "isDeleted",
+          "type": "Boolean",
+          "options": {
+            "default": false,
+            "index": true
+          }
+        },
+        {
+          "path": "deletedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "createdAt",
+          "type": "Date",
+          "options": {
+            "immutable": true
+          }
+        },
+        {
+          "path": "updatedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "storeId",
+          "type": "Mixed",
+          "options": {
+            "validate": "function isStoredResourceId(value) {\n  return value instanceof mongoose.Types.ObjectId && canonicalAccountId(value) !== null;\n}"
+          }
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [
+        [
+          {
+            "owner": 1
+          },
+          {}
+        ],
+        [
+          {
+            "isDeleted": 1
+          },
+          {}
+        ],
+        [
+          {
+            "owner": 1,
+            "name": 1
+          },
+          {}
+        ],
+        [
+          {
+            "owner": 1,
+            "phone": 1
+          },
+          {}
+        ],
+        [
+          {
+            "storeId": 1,
+            "createdAt": -1
+          },
+          {}
+        ]
+      ],
+      "virtuals": [
+        "userId",
+        "contactInfo",
+        "totalDebt",
+        "totalPaid",
+        "totalOrders",
+        "id"
+      ]
+    },
+    {
+      "model": "DebtPayment",
+      "collection": "debtpayments",
+      "loadedByApp": true,
+      "options": {
+        "strict": true,
+        "timestamps": true,
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "owner",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "index": true,
+            "ref": "User"
+          }
+        },
+        {
+          "path": "customer",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "index": true,
+            "ref": "Customer"
+          }
+        },
+        {
+          "path": "transaction",
+          "type": "ObjectId",
+          "options": {
+            "index": true,
+            "ref": "Transaction"
+          }
+        },
+        {
+          "path": "amountPaid",
+          "type": "Number",
+          "options": {
+            "required": true,
+            "min": 1
+          }
+        },
+        {
+          "path": "paymentMethod",
+          "type": "String",
+          "options": {
+            "default": "cash",
+            "enum": [
+              "cash",
+              "gcash",
+              "bank",
+              "credit"
+            ]
+          }
+        },
+        {
+          "path": "paymentReference",
+          "type": "String",
+          "options": {
+            "default": "",
+            "trim": true
+          }
+        },
+        {
+          "path": "paidAt",
+          "type": "Date",
+          "options": {
+            "default": "function now() { [native code] }",
+            "index": true
+          }
+        },
+        {
+          "path": "notes",
+          "type": "String",
+          "options": {
+            "default": ""
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "createdAt",
+          "type": "Date",
+          "options": {
+            "immutable": true
+          }
+        },
+        {
+          "path": "updatedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "storeId",
+          "type": "Mixed",
+          "options": {
+            "validate": "function isStoredResourceId(value) {\n  return value instanceof mongoose.Types.ObjectId && canonicalAccountId(value) !== null;\n}"
+          }
+        },
+        {
+          "path": "moneyUnit",
+          "type": "Mixed",
+          "options": {
+            "validate": "value => value === \"PHP-centavos\""
+          }
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [
+        [
+          {
+            "owner": 1
+          },
+          {}
+        ],
+        [
+          {
+            "customer": 1
+          },
+          {}
+        ],
+        [
+          {
+            "transaction": 1
+          },
+          {}
+        ],
+        [
+          {
+            "paidAt": 1
+          },
+          {}
+        ],
+        [
+          {
+            "owner": 1,
+            "customer": 1,
+            "paidAt": -1
+          },
+          {}
+        ],
+        [
+          {
+            "owner": 1,
+            "transaction": 1,
+            "paidAt": -1
+          },
+          {}
+        ],
+        [
+          {
+            "storeId": 1,
+            "createdAt": -1
+          },
+          {}
+        ]
+      ],
+      "virtuals": [
+        "userId",
+        "personId",
+        "id"
+      ]
+    },
+    {
+      "model": "Expense",
+      "collection": "expenses",
+      "loadedByApp": true,
+      "options": {
+        "strict": true,
+        "timestamps": "<undefined>",
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "userId",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "ref": "User"
+          }
+        },
+        {
+          "path": "itemName",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "amount",
+          "type": "Number",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "category",
+          "type": "String",
+          "options": {
+            "default": "misc",
+            "enum": [
+              "inventory",
+              "rent",
+              "utilities",
+              "salary",
+              "misc"
+            ]
+          }
+        },
+        {
+          "path": "note",
+          "type": "String",
+          "options": {}
+        },
+        {
+          "path": "date",
+          "type": "Date",
+          "options": {
+            "default": "function now() { [native code] }"
+          }
+        },
+        {
+          "path": "createdBy",
+          "type": "ObjectId",
+          "options": {
+            "ref": "User"
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [],
+      "virtuals": [
+        "id"
+      ]
+    },
+    {
+      "model": "Financial",
+      "collection": "financials",
+      "loadedByApp": false,
+      "options": {
+        "strict": true,
+        "timestamps": true,
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "userId",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "ref": "User"
+          }
+        },
+        {
+          "path": "capitalInvested",
+          "type": "Number",
+          "options": {
+            "default": 0
+          }
+        },
+        {
+          "path": "grossIncome",
+          "type": "Number",
+          "options": {
+            "default": 0
+          }
+        },
+        {
+          "path": "netIncome",
+          "type": "Number",
+          "options": {
+            "default": 0
+          }
+        },
+        {
+          "path": "expenses",
+          "type": "Array<EmbeddedDocument>",
+          "options": {},
+          "implicitDefault": "[] (Mongoose array default)"
+        },
+        {
+          "path": "expenses[].type",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "expenses[].amount",
+          "type": "Number",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "expenses[].date",
+          "type": "Date",
+          "options": {
+            "default": "function now() { [native code] }"
+          }
+        },
+        {
+          "path": "expenses[]._id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "notes",
+          "type": "String",
+          "options": {}
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "createdAt",
+          "type": "Date",
+          "options": {
+            "immutable": true
+          }
+        },
+        {
+          "path": "updatedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [],
+      "virtuals": [
+        "id"
+      ]
+    },
+    {
+      "model": "GuestOrderIntent",
+      "collection": "guestorderintents",
+      "loadedByApp": true,
+      "options": {
+        "strict": "throw",
+        "timestamps": true,
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "storeId",
+          "type": "ObjectId",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "verification",
+          "type": "Mixed",
+          "options": {
+            "required": true,
+            "select": false
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "createdAt",
+          "type": "Date",
+          "options": {
+            "immutable": true
+          }
+        },
+        {
+          "path": "updatedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [],
+      "virtuals": [
+        "id"
+      ]
+    },
+    {
+      "model": "Invoice",
+      "collection": "invoices",
+      "loadedByApp": true,
+      "options": {
+        "strict": true,
+        "timestamps": true,
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "owner",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "index": true,
+            "ref": "User"
+          }
+        },
+        {
+          "path": "customer",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "index": true,
+            "ref": "Customer"
+          }
+        },
+        {
+          "path": "transaction",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "index": true,
+            "ref": "Transaction"
+          }
+        },
+        {
+          "path": "invoiceNumber",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "issuedAt",
+          "type": "Date",
+          "options": {
+            "default": "function now() { [native code] }",
+            "index": true
+          }
+        },
+        {
+          "path": "dueDate",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "status",
+          "type": "String",
+          "options": {
+            "default": "unpaid",
+            "enum": [
+              "unpaid",
+              "partial",
+              "paid",
+              "void"
+            ],
+            "index": true
+          }
+        },
+        {
+          "path": "notes",
+          "type": "String",
+          "options": {
+            "default": ""
+          }
+        },
+        {
+          "path": "snapshot",
+          "type": "Mixed",
+          "options": {}
+        },
+        {
+          "path": "reversalId",
+          "type": "ObjectId",
+          "options": {}
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "createdAt",
+          "type": "Date",
+          "options": {
+            "immutable": true
+          }
+        },
+        {
+          "path": "updatedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "storeId",
+          "type": "Mixed",
+          "options": {
+            "validate": "function isStoredResourceId(value) {\n  return value instanceof mongoose.Types.ObjectId && canonicalAccountId(value) !== null;\n}"
+          }
+        },
+        {
+          "path": "moneyUnit",
+          "type": "Mixed",
+          "options": {
+            "validate": "value => value === \"PHP-centavos\""
+          }
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [
+        [
+          {
+            "owner": 1
+          },
+          {}
+        ],
+        [
+          {
+            "customer": 1
+          },
+          {}
+        ],
+        [
+          {
+            "transaction": 1
+          },
+          {}
+        ],
+        [
+          {
+            "issuedAt": 1
+          },
+          {}
+        ],
+        [
+          {
+            "status": 1
+          },
+          {}
+        ],
+        [
+          {
+            "owner": 1,
+            "invoiceNumber": 1
+          },
+          {}
+        ],
+        [
+          {
+            "owner": 1,
+            "transaction": 1
+          },
+          {}
+        ],
+        [
+          {
+            "storeId": 1,
+            "createdAt": -1
+          },
+          {}
+        ]
+      ],
+      "virtuals": [
+        "userId",
+        "orderId",
+        "id"
+      ]
+    },
+    {
+      "model": "InvoiceCounter",
+      "collection": "invoicecounters",
+      "loadedByApp": true,
+      "options": {
+        "strict": true,
+        "timestamps": "<undefined>",
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "owner",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "ref": "User"
+          }
+        },
+        {
+          "path": "type",
+          "type": "String",
+          "options": {
+            "required": true,
+            "default": "invoice"
+          }
+        },
+        {
+          "path": "year",
+          "type": "Number",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "seq",
+          "type": "Number",
+          "options": {
+            "default": 0
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [
+        [
+          {
+            "owner": 1,
+            "type": 1,
+            "year": 1
+          },
+          {}
+        ]
+      ],
+      "virtuals": [
+        "userId",
+        "id"
+      ]
+    },
+    {
+      "model": "Product",
+      "collection": "products",
+      "loadedByApp": true,
+      "options": {
+        "strict": true,
+        "timestamps": true,
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "owner",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "index": true,
+            "ref": "User"
+          }
+        },
+        {
+          "path": "name",
+          "type": "String",
+          "options": {
+            "required": true,
+            "trim": true
+          }
+        },
+        {
+          "path": "sku",
+          "type": "String",
+          "options": {
+            "default": "",
+            "trim": true
+          }
+        },
+        {
+          "path": "price",
+          "type": "Number",
+          "options": {
+            "required": true,
+            "min": 0
+          }
+        },
+        {
+          "path": "stock",
+          "type": "Number",
+          "options": {
+            "default": 0,
+            "min": 0
+          }
+        },
+        {
+          "path": "sizeStocks",
+          "type": "Mixed",
+          "options": {
+            "default": "<undefined>"
+          }
+        },
+        {
+          "path": "category",
+          "type": "String",
+          "options": {
+            "default": "General",
+            "trim": true
+          }
+        },
+        {
+          "path": "isActive",
+          "type": "Boolean",
+          "options": {
+            "default": true,
+            "index": true
+          }
+        },
+        {
+          "path": "imageUrl",
+          "type": "String",
+          "options": {
+            "default": "<undefined>"
+          }
+        },
+        {
+          "path": "costPrice",
+          "type": "Number",
+          "options": {
+            "default": 0,
+            "min": 0
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "createdAt",
+          "type": "Date",
+          "options": {
+            "immutable": true
+          }
+        },
+        {
+          "path": "updatedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "storeId",
+          "type": "Mixed",
+          "options": {
+            "validate": "function isStoredResourceId(value) {\n  return value instanceof mongoose.Types.ObjectId && canonicalAccountId(value) !== null;\n}"
+          }
+        },
+        {
+          "path": "moneyUnit",
+          "type": "Mixed",
+          "options": {
+            "validate": "value => value === \"PHP-centavos\""
+          }
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [
+        [
+          {
+            "owner": 1
+          },
+          {}
+        ],
+        [
+          {
+            "isActive": 1
+          },
+          {}
+        ],
+        [
+          {
+            "owner": 1,
+            "name": 1
+          },
+          {}
+        ],
+        [
+          {
+            "owner": 1,
+            "sku": 1
+          },
+          {}
+        ],
+        [
+          {
+            "owner": 1,
+            "category": 1,
+            "isActive": 1
+          },
+          {}
+        ],
+        [
+          {
+            "storeId": 1,
+            "createdAt": -1
+          },
+          {}
+        ]
+      ],
+      "virtuals": [
+        "userId",
+        "sellingPrice",
+        "quantity",
+        "active",
+        "id"
+      ]
+    },
+    {
+      "model": "StockMovement",
+      "collection": "stockmovements",
+      "loadedByApp": true,
+      "options": {
+        "strict": "throw",
+        "timestamps": "<undefined>",
+        "versionKey": false,
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "storeId",
+          "type": "ObjectId",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "productId",
+          "type": "ObjectId",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "actorId",
+          "type": "ObjectId",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "operationId",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "delta",
+          "type": "Number",
+          "options": {
+            "required": true,
+            "validate": "function isSafeInteger() { [native code] }"
+          }
+        },
+        {
+          "path": "before",
+          "type": "Number",
+          "options": {
+            "required": true,
+            "min": 0,
+            "validate": "function isSafeInteger() { [native code] }"
+          }
+        },
+        {
+          "path": "after",
+          "type": "Number",
+          "options": {
+            "required": true,
+            "min": 0,
+            "validate": "function isSafeInteger() { [native code] }"
+          }
+        },
+        {
+          "path": "reason",
+          "type": "String",
+          "options": {
+            "required": true,
+            "set": "function redactAuditText(value) {\n  return redactSensitive(value)\n    .replace(/\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{20,}/g, \"[REDACTED HASH]\")\n    .replace(/\\beyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\b/g, \"[REDACTED TOKEN]\")\n    .replace(/\\b(password|passwd|pwd|secret|(?:access[_-]?)?token|authorization|api[_-]?key)\\s*[:=]\\s*(?:\"[^\"]*\"|'[^']*'|[^\\s,;]+)/gi, \"$1=[REDACTED]\");\n}"
+          }
+        },
+        {
+          "path": "source",
+          "type": "String",
+          "options": {
+            "required": true,
+            "enum": [
+              "adjustment",
+              "sale",
+              "return"
+            ]
+          }
+        },
+        {
+          "path": "occurredAt",
+          "type": "Date",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "transactionId",
+          "type": "ObjectId",
+          "options": {}
+        },
+        {
+          "path": "sizeChanges",
+          "type": "Array<EmbeddedDocument>",
+          "options": {
+            "default": "<undefined>"
+          }
+        },
+        {
+          "path": "sizeChanges[].size",
+          "type": "String",
+          "options": {
+            "required": true,
+            "enum": [
+              "XS",
+              "S",
+              "M",
+              "L",
+              "XL",
+              "2XL",
+              "3XL",
+              "4XL"
+            ]
+          }
+        },
+        {
+          "path": "sizeChanges[].before",
+          "type": "Number",
+          "options": {
+            "required": true,
+            "min": 0,
+            "validate": "function isSafeInteger() { [native code] }"
+          }
+        },
+        {
+          "path": "sizeChanges[].after",
+          "type": "Number",
+          "options": {
+            "required": true,
+            "min": 0,
+            "validate": "function isSafeInteger() { [native code] }"
+          }
+        },
+        {
+          "path": "sizeChanges[].delta",
+          "type": "Number",
+          "options": {
+            "required": true,
+            "validate": "function isSafeInteger() { [native code] }"
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        }
+      ],
+      "indexes": [
+        [
+          {
+            "actorId": 1,
+            "operationId": 1,
+            "productId": 1
+          },
+          {
+            "unique": true
+          }
+        ],
+        [
+          {
+            "storeId": 1,
+            "productId": 1,
+            "occurredAt": -1
+          },
+          {}
+        ]
+      ],
+      "virtuals": [
+        "id"
+      ]
+    },
+    {
+      "model": "Store",
+      "collection": "stores",
+      "loadedByApp": true,
+      "options": {
+        "strict": "throw",
+        "timestamps": true,
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "name",
+          "type": "String",
+          "options": {
+            "required": true,
+            "trim": true
+          }
+        },
+        {
+          "path": "categoryNames",
+          "type": "Array<Mixed>",
+          "options": {
+            "default": "<undefined>"
+          }
+        },
+        {
+          "path": "createdBy",
+          "type": "ObjectId",
+          "options": {
+            "ref": "User"
+          }
+        },
+        {
+          "path": "orderCustomer",
+          "type": "ObjectId",
+          "options": {
+            "ref": "Customer"
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "createdAt",
+          "type": "Date",
+          "options": {
+            "immutable": true
+          }
+        },
+        {
+          "path": "updatedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [],
+      "virtuals": [
+        "id"
+      ]
+    },
+    {
+      "model": "Transaction",
+      "collection": "transactions",
+      "loadedByApp": true,
+      "options": {
+        "strict": true,
+        "timestamps": {
+          "createdAt": false,
+          "updatedAt": true
+        },
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "owner",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "index": true,
+            "ref": "User"
+          }
+        },
+        {
+          "path": "customer",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "index": true,
+            "ref": "Customer"
+          }
+        },
+        {
+          "path": "items",
+          "type": "Array<EmbeddedDocument>",
+          "options": {},
+          "implicitDefault": "[] (Mongoose array default)"
+        },
+        {
+          "path": "items[].product",
+          "type": "ObjectId",
+          "options": {
+            "required": true,
+            "ref": "Product"
+          }
+        },
+        {
+          "path": "items[].quantity",
+          "type": "Number",
+          "options": {
+            "required": true,
+            "min": 1
+          }
+        },
+        {
+          "path": "items[].unitPrice",
+          "type": "Number",
+          "options": {
+            "required": true,
+            "min": 0
+          }
+        },
+        {
+          "path": "items[].name",
+          "type": "String",
+          "options": {}
+        },
+        {
+          "path": "items[].sku",
+          "type": "String",
+          "options": {}
+        },
+        {
+          "path": "items[].category",
+          "type": "String",
+          "options": {}
+        },
+        {
+          "path": "items[].size",
+          "type": "String",
+          "options": {
+            "default": "<undefined>",
+            "enum": [
+              "XS",
+              "S",
+              "M",
+              "L",
+              "XL",
+              "2XL",
+              "3XL",
+              "4XL"
+            ]
+          }
+        },
+        {
+          "path": "items[].subtotal",
+          "type": "Number",
+          "options": {
+            "required": true,
+            "min": 0
+          }
+        },
+        {
+          "path": "totalAmount",
+          "type": "Number",
+          "options": {
+            "required": true,
+            "min": 0
+          }
+        },
+        {
+          "path": "amountPaid",
+          "type": "Number",
+          "options": {
+            "default": 0,
+            "min": 0
+          }
+        },
+        {
+          "path": "balance",
+          "type": "Number",
+          "options": {
+            "default": 0,
+            "min": 0
+          }
+        },
+        {
+          "path": "paymentStatus",
+          "type": "String",
+          "options": {
+            "default": "debt",
+            "enum": [
+              "paid",
+              "partial",
+              "debt",
+              "unpaid"
+            ],
+            "index": true
+          }
+        },
+        {
+          "path": "paymentMethod",
+          "type": "String",
+          "options": {
+            "default": "cash",
+            "enum": [
+              "cash",
+              "gcash",
+              "bank",
+              "credit"
+            ]
+          }
+        },
+        {
+          "path": "paymentReference",
+          "type": "String",
+          "options": {
+            "default": "",
+            "trim": true
+          }
+        },
+        {
+          "path": "customerType",
+          "type": "String",
+          "options": {
+            "default": "customer",
+            "enum": [
+              "walkin",
+              "customer",
+              "grab",
+              "foodpanda"
+            ]
+          }
+        },
+        {
+          "path": "reference",
+          "type": "String",
+          "options": {
+            "default": "",
+            "trim": true
+          }
+        },
+        {
+          "path": "orderStatus",
+          "type": "String",
+          "options": {
+            "default": "completed",
+            "enum": [
+              "pending",
+              "completed",
+              "void",
+              "cancelled"
+            ],
+            "index": true
+          }
+        },
+        {
+          "path": "ledgerRecorded",
+          "type": "Boolean",
+          "options": {
+            "default": false,
+            "index": true
+          }
+        },
+        {
+          "path": "completedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "processedBy",
+          "type": "ObjectId",
+          "options": {
+            "ref": "User"
+          }
+        },
+        {
+          "path": "origin",
+          "type": "String",
+          "options": {
+            "enum": [
+              "guest",
+              "student",
+              "pos"
+            ]
+          }
+        },
+        {
+          "path": "directPayment",
+          "type": "Boolean",
+          "options": {
+            "default": "<undefined>"
+          }
+        },
+        {
+          "path": "studentUser",
+          "type": "ObjectId",
+          "options": {
+            "ref": "User",
+            "select": false
+          }
+        },
+        {
+          "path": "assignedTo",
+          "type": "ObjectId",
+          "options": {
+            "ref": "User"
+          }
+        },
+        {
+          "path": "bookstoreReference",
+          "type": "String",
+          "options": {}
+        },
+        {
+          "path": "cancelledAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "cancelledBy",
+          "type": "ObjectId",
+          "options": {}
+        },
+        {
+          "path": "cancellationReason",
+          "type": "String",
+          "options": {}
+        },
+        {
+          "path": "reversalId",
+          "type": "ObjectId",
+          "options": {}
+        },
+        {
+          "path": "reversedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "notes",
+          "type": "String",
+          "options": {
+            "default": ""
+          }
+        },
+        {
+          "path": "voidedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "voidReason",
+          "type": "String",
+          "options": {}
+        },
+        {
+          "path": "createdAt",
+          "type": "Date",
+          "options": {
+            "default": "function now() { [native code] }",
+            "index": true
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "updatedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "storeId",
+          "type": "Mixed",
+          "options": {
+            "validate": "function isStoredResourceId(value) {\n  return value instanceof mongoose.Types.ObjectId && canonicalAccountId(value) !== null;\n}"
+          }
+        },
+        {
+          "path": "moneyUnit",
+          "type": "Mixed",
+          "options": {
+            "validate": "value => value === \"PHP-centavos\""
+          }
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [
+        [
+          {
+            "owner": 1
+          },
+          {}
+        ],
+        [
+          {
+            "customer": 1
+          },
+          {}
+        ],
+        [
+          {
+            "paymentStatus": 1
+          },
+          {}
+        ],
+        [
+          {
+            "orderStatus": 1
+          },
+          {}
+        ],
+        [
+          {
+            "ledgerRecorded": 1
+          },
+          {}
+        ],
+        [
+          {
+            "createdAt": 1
+          },
+          {}
+        ],
+        [
+          {
+            "owner": 1,
+            "customer": 1,
+            "createdAt": -1,
+            "paymentStatus": 1
+          },
+          {}
+        ],
+        [
+          {
+            "owner": 1,
+            "createdAt": -1
+          },
+          {}
+        ],
+        [
+          {
+            "storeId": 1,
+            "createdAt": -1
+          },
+          {}
+        ],
+        [
+          {
+            "bookstoreReference": 1
+          },
+          {
+            "unique": true,
+            "sparse": true
+          }
+        ]
+      ],
+      "virtuals": [
+        "userId",
+        "personId",
+        "products",
+        "total",
+        "date",
+        "id"
+      ]
+    },
+    {
+      "model": "User",
+      "collection": "users",
+      "loadedByApp": true,
+      "options": {
+        "strict": true,
+        "timestamps": true,
+        "versionKey": "__v",
+        "minimize": true
+      },
+      "fields": [
+        {
+          "path": "identifier",
+          "type": "String",
+          "options": {
+            "required": true,
+            "unique": true
+          }
+        },
+        {
+          "path": "password",
+          "type": "String",
+          "options": {
+            "required": true
+          }
+        },
+        {
+          "path": "role",
+          "type": "String",
+          "options": {
+            "required": true,
+            "default": "function defaultNewAccountRole() { return this.isNew ? \"user\" : undefined; }",
+            "enum": [
+              "admin",
+              "store_manager",
+              "cashier",
+              "customer",
+              "user"
+            ]
+          }
+        },
+        {
+          "path": "name",
+          "type": "String",
+          "options": {}
+        },
+        {
+          "path": "phone",
+          "type": "String",
+          "options": {
+            "unique": true,
+            "sparse": true
+          }
+        },
+        {
+          "path": "address",
+          "type": "String",
+          "options": {}
+        },
+        {
+          "path": "storeIds",
+          "type": "Mixed",
+          "options": {
+            "validate": "function isStoredMemberships(value) {\n  if (!Array.isArray(value)) return false;\n  const ids = new Set();\n  for (let index = 0; index < value.length; index++) {\n    if (!Object.hasOwn(value, index) || !isStoredResourceId(value[index])) return false;\n    const id = value[index].toHexString();\n    if (ids.has(id)) return false;\n    ids.add(id);\n  }\n  return true;\n}"
+          }
+        },
+        {
+          "path": "confirmed",
+          "type": "Mixed",
+          "options": {
+            "default": "function newConfirmationState() { return this.isNew ? false : undefined; }",
+            "validate": "value => typeof value === \"boolean\""
+          }
+        },
+        {
+          "path": "accountState",
+          "type": "Mixed",
+          "options": {
+            "default": "function newAccountState() { return this.isNew ? \"active\" : undefined; }",
+            "validate": "value => [\"active\", \"suspended\"].includes(value)"
+          }
+        },
+        {
+          "path": "authorityVersion",
+          "type": "Mixed",
+          "options": {
+            "validate": {
+              "validator": "function isTokenVersion(value) {\n  return Number.isSafeInteger(value) && value >= 0;\n}",
+              "message": "Invalid account authority version"
+            }
+          }
+        },
+        {
+          "path": "tokenVersion",
+          "type": "Mixed",
+          "options": {
+            "validate": {
+              "validator": "function isTokenVersion(value) {\n  return Number.isSafeInteger(value) && value >= 0;\n}",
+              "message": "Invalid account security version"
+            }
+          }
+        },
+        {
+          "path": "_id",
+          "type": "ObjectId",
+          "options": {
+            "auto": true
+          },
+          "implicitDefault": "function defaultId() {\r\n  return new oid();\r\n}"
+        },
+        {
+          "path": "createdAt",
+          "type": "Date",
+          "options": {
+            "immutable": true
+          }
+        },
+        {
+          "path": "updatedAt",
+          "type": "Date",
+          "options": {}
+        },
+        {
+          "path": "__v",
+          "type": "Number",
+          "options": {}
+        }
+      ],
+      "indexes": [
+        [
+          {
+            "identifier": 1
+          },
+          {
+            "unique": true
+          }
+        ],
+        [
+          {
+            "phone": 1
+          },
+          {
+            "unique": true,
+            "sparse": true
+          }
+        ]
+      ],
+      "virtuals": [
+        "id"
+      ]
+    }
+  ],
+  "sourceManifest": [
+    {
+      "path": "backend/app.js",
+      "sha256": "be5adfd183420842b61c306577bdd74070a37d2c87e948d0bf316cbed8a0471f"
+    },
+    {
+      "path": "backend/auth/accountRoles.js",
+      "sha256": "a59bb907d1971be5b680065438ed1b8abbe64395ea2f8a82706720854e04a8a3"
+    },
+    {
+      "path": "backend/auth/accountRouteManifest.js",
+      "sha256": "4fa46ebeead5b35b71c129ea742507668826d9c12d954693c09a7b01bbf29401"
+    },
+    {
+      "path": "backend/auth/accountState.js",
+      "sha256": "2b124413096697ea83e715df7e2c6b3b33bbd53f40d4670cac2ceee0ea07a230"
+    },
+    {
+      "path": "backend/auth/auditText.js",
+      "sha256": "6c406315e5e83c47242e1bebdba5d9cb66625f8246141468818f260facee8bf3"
+    },
+    {
+      "path": "backend/auth/bookstoreRouteManifest.js",
+      "sha256": "9ab0ed3808397c4d7bb4c183a548876c394c4d397be4309f501d1e48b7339dc9"
+    },
+    {
+      "path": "backend/auth/capabilities.js",
+      "sha256": "8a1a40b1789431476493233e952c381110f8b63470944503d4ef3e62ed1b5906"
+    },
+    {
+      "path": "backend/auth/fieldPolicy.js",
+      "sha256": "ebf4e4f23e7b5938566a40f9f46f4d03631afaeb246d6ef8bc848e591a49238f"
+    },
+    {
+      "path": "backend/auth/guestOrderAccess.js",
+      "sha256": "1e13e2bc8ec39c812d44a26343010183723cdadf90723fbc5a1e8b16250191bd"
+    },
+    {
+      "path": "backend/auth/operationalProjection.js",
+      "sha256": "d34349e2ea303b7ba50c012f6310124bf68ab21e2acde2f26ad179aa1eb8938a"
+    },
+    {
+      "path": "backend/auth/policy.js",
+      "sha256": "b2c4eda2dd4c81d2ee77254902f2921c554e35de813dd5b613afde5acfa342ab"
+    },
+    {
+      "path": "backend/auth/resourceScope.js",
+      "sha256": "79cdc555d0280643585a3bd5c54b2119929616e0f48134aacbc12dab4b7687bc"
+    },
+    {
+      "path": "backend/auth/roles.js",
+      "sha256": "a680633178c88e36a75e1d4a3cb54671c80d689cfac4395f8fc1a2c6032621da"
+    },
+    {
+      "path": "backend/auth/routeManifest.js",
+      "sha256": "6c3ac0f1cd5b4c3adbd4101ec43748f7b625403de3a13d27260bd9d677003907"
+    },
+    {
+      "path": "backend/config/config.js",
+      "sha256": "477bbfb7f90d1daa485204f1e738471226304aae9e5d94bd3fc53772bf308492"
+    },
+    {
+      "path": "backend/controllers/AccountLifecycleController.js",
+      "sha256": "f10de2b5dd329cd3fdc3cc8a1eac6269925f3a10b53097e9300e3df590a58ed4"
+    },
+    {
+      "path": "backend/controllers/DebtPaymentController.js",
+      "sha256": "a0e87191588037d7ad50bcef6b27b3db2953b3cef4eca7e642602040b3cf5e1e"
+    },
+    {
+      "path": "backend/controllers/ExpenseController.js",
+      "sha256": "cdd43da099041dd6b6dd419749422f274d1b7021e14e91bd324bcd32c094d20d"
+    },
+    {
+      "path": "backend/controllers/FinancialController.js",
+      "sha256": "b167a6c572aa7db14e5ad2b7f55a4bc052fca5f8e9ab6a5f39133a2aa2c58335"
+    },
+    {
+      "path": "backend/controllers/InvoiceController.js",
+      "sha256": "ee2137b1766c66b9fc586d11b3f67cf1267251526248891592d40d1646435753"
+    },
+    {
+      "path": "backend/controllers/OrderController.js",
+      "sha256": "e35f6b33a49cafc8c8085d15b2a1bf10f82b7cc998bdaa76c4a9f5f85678a0f3"
+    },
+    {
+      "path": "backend/controllers/PersonController.js",
+      "sha256": "c6422c7a30d7df70a48ffe50b46018e73e76a8352d02602d79528b2431e3909b"
+    },
+    {
+      "path": "backend/controllers/ProductController.js",
+      "sha256": "c08476b1307a28995f18d7b7b6d61d1d5025896280e9025a70b29926af16b362"
+    },
+    {
+      "path": "backend/controllers/UserController.js",
+      "sha256": "93992348e2d01ce57f4698913b2f1e1f3d07acc891d0e077053ca9d41912957a"
+    },
+    {
+      "path": "backend/index.js",
+      "sha256": "9d563344e0c2815e7fcd0d0e64d203d2d83e176bba8199964e60d0441fc2a542"
+    },
+    {
+      "path": "backend/middleware/accountOperation.js",
+      "sha256": "9457c138c9f2381c7578cd1192e46dc3151a93b7307c6c327524b19d5714146c"
+    },
+    {
+      "path": "backend/middleware/authMiddleware.js",
+      "sha256": "11e266da85bc6f4065d6c5b28ef60aa0a90d200028d89ac4953fdee1b070408b"
+    },
+    {
+      "path": "backend/middleware/bookstoreAdmission.js",
+      "sha256": "fb9b3718cd25dda5c5ef9dfba1e4bbe20e9b025b4795a8b81f04e6abb524f509"
+    },
+    {
+      "path": "backend/middleware/errorMiddleware.js",
+      "sha256": "2f96a2552fc4db6fff2cb5b75b54b76c8709b14edbcdd4153752f651d4056844"
+    },
+    {
+      "path": "backend/middleware/guestBookstore.js",
+      "sha256": "f1d734bdccfb2126f0c70b5f8e5220c711f1883bc3561a3699847348207da28b"
+    },
+    {
+      "path": "backend/middleware/logger.js",
+      "sha256": "c120444140c8e1e656a9d93d05738a2216b873de5b6ec91ef5aa3f77ca92627c"
+    },
+    {
+      "path": "backend/middleware/roleAdmission.js",
+      "sha256": "f290cffbc18793fee45118545d4c267b30fbecc503992d8f8abf71d5b4badae3"
+    },
+    {
+      "path": "backend/models/AccountControl.js",
+      "sha256": "6ae633ac05bc91e133d8c871f1ffe2a750bc33080461f1c820588e803721a848"
+    },
+    {
+      "path": "backend/models/BookstoreControl.js",
+      "sha256": "b8e95abe678ebf770127d1655f266faf6ed135b86b41d3f18fd5be80921d71e1"
+    },
+    {
+      "path": "backend/models/DebtPayment.js",
+      "sha256": "c61375d3c2ab416ee54735119cf3bf9c32ed8fff1b198c5f4e3f6e1feca2c245"
+    },
+    {
+      "path": "backend/models/Expense.js",
+      "sha256": "6044ce8e4f85a39b20d42ea95f1013c2330ea8ef0e0d73eeea820140fa0a5d0f"
+    },
+    {
+      "path": "backend/models/Financial.js",
+      "sha256": "ab428a9738e53ce354fcfd44351c0b2d0735a607b16485b7a8242d087ea7e75b"
+    },
+    {
+      "path": "backend/models/Invoice.js",
+      "sha256": "463aba50b5a86dc2b711cf1d5e6f1d856e77196af9e613a4c447e40d9a531254"
+    },
+    {
+      "path": "backend/models/InvoiceCounter.js",
+      "sha256": "6a215ac5339c78de2218876590a64ddc43d1214d0d859bd00aef0a3f18d15032"
+    },
+    {
+      "path": "backend/models/Order.js",
+      "sha256": "72b28bdea5ee08d11cb79d4b79d7ed6c9e3a1c0401258a3d913e22fbf43e4cca"
+    },
+    {
+      "path": "backend/models/Person.js",
+      "sha256": "5236308a70bccf9be44ff01c17d443bae7670caaecd5a2ffeca62f2e399dd300"
+    },
+    {
+      "path": "backend/models/Product.js",
+      "sha256": "e8f15188c4c0f96c4338cca25649aa0a9b7967ad2bdfc7c1265ac056c2e79e27"
+    },
+    {
+      "path": "backend/models/resourceAttribution.js",
+      "sha256": "97e5fa34eaaafa635762889e911b795f8117bc99f7b0edeb1fddeb900ed0e65d"
+    },
+    {
+      "path": "backend/models/Store.js",
+      "sha256": "2a57b8ee1ff57c4cfb7f8df60fdf23ab76e311e97a87f4299fdc6e68eeaa83b3"
+    },
+    {
+      "path": "backend/models/User.js",
+      "sha256": "47f5d55d3b607e419300b0bb2ea75ce680e3b5ab72c65e982db2ce103d4e4d3a"
+    },
+    {
+      "path": "backend/package.json",
+      "sha256": "b129b400705f92b203c9145bd42e3864d715a379c365b63852d2c0cac6e54d52"
+    },
+    {
+      "path": "backend/routes/BookstoreRoute.js",
+      "sha256": "2f2409ffc72e5e5c50cbcc518a37f235ec8d7f650633464c15f0efc0da689761"
+    },
+    {
+      "path": "backend/routes/CustomerRoute.js",
+      "sha256": "86a54d2d6887f4c07981f5e0bea1c94e41e24d7837f578e329ee8d74982ea971"
+    },
+    {
+      "path": "backend/routes/DashboardRoute.js",
+      "sha256": "28aacb5f1692a07223de4c69b953efd716e4b7f626b6479663c3148d4293a81d"
+    },
+    {
+      "path": "backend/routes/DebtPaymentRoute.js",
+      "sha256": "591c77c6dfe05d4620149c440b2ea5dfff480c023aae86b979a76fbe82f2cbf5"
+    },
+    {
+      "path": "backend/routes/ExpenseRoute.js",
+      "sha256": "734d83ac2ffa240e7f1663a59d078361746809035ff0768026bf1a96b13c0081"
+    },
+    {
+      "path": "backend/routes/FinancialRoute.js",
+      "sha256": "d5ccb5c311c970faec3e092b410ea54992481946fb6ce26c1e8864e77e1e4356"
+    },
+    {
+      "path": "backend/routes/InvoiceRoute.js",
+      "sha256": "005cf4f7ddcf774278e9e7efd7320cd90c86625871b2cf795d2acdf7074e4115"
+    },
+    {
+      "path": "backend/routes/OrderRoute.js",
+      "sha256": "2ab86744f6b15272675e161f8915bf108cffd8ddec00471470a730c64d90eee7"
+    },
+    {
+      "path": "backend/routes/PersonRoute.js",
+      "sha256": "acbfe29e8028a694490d78a3d41acdcdfcd45eeca3cd8e13058aef6d9dbf293f"
+    },
+    {
+      "path": "backend/routes/ProductRoute.js",
+      "sha256": "c0459446b139fc2d5575008a2c3f4aed7a98c55d1e6866ec56204bab80f1f1cf"
+    },
+    {
+      "path": "backend/routes/TransactionRoute.js",
+      "sha256": "b8be238877048a4d4e448b102c8ec76192bda2e65ee8fad8bcd7c2b12398a251"
+    },
+    {
+      "path": "backend/routes/UserRoute.js",
+      "sha256": "b9879d7b00e00d6ad34261245b0cc6c26a0053faf7fd99a8b605cacd6dc23063"
+    },
+    {
+      "path": "backend/services/accountManagement.js",
+      "sha256": "ad8df184f010021446d2923d9373c5376cc3433653ffae4e4b8e685eaa19732d"
+    },
+    {
+      "path": "backend/services/bookstoreAccess.js",
+      "sha256": "41f33442e7837454b963f9e1abb8c5044a11f1bd49365c60f716f4f1019312b4"
+    },
+    {
+      "path": "backend/services/bookstoreAdministration.js",
+      "sha256": "7f368e0b93d406e5b90cd11d478cc95241bb0dda4de0cf1a667f37b7314fc005"
+    },
+    {
+      "path": "backend/services/bookstoreAliases.js",
+      "sha256": "a8d0e51a8fee3422661bb8f8bbf7439bc24ad0e90ef47ac93051634eb99d00c0"
+    },
+    {
+      "path": "backend/services/bookstoreCommand.js",
+      "sha256": "ea99addba3c4248d9609f2585d91c3b194304d8b713bd20fe129997f4b38e621"
+    },
+    {
+      "path": "backend/services/bookstoreGrants.js",
+      "sha256": "80a68a0fbf65283dee393b59a9769d0c86d8dd38845a5906f0b190b4b93765b0"
+    },
+    {
+      "path": "backend/services/bookstoreMapping.js",
+      "sha256": "1e5f0101620d320a0de0706853669dab801538067eab5f52050321c0f4fce757"
+    },
+    {
+      "path": "backend/services/bookstoreOrders.js",
+      "sha256": "2d2d427f4a146b68319eb404545d2ea3a72a98b6a2eefb23b40909d61265b734"
+    },
+    {
+      "path": "backend/services/bookstoreReads.js",
+      "sha256": "ce4f07d7aa18e71f3c16ba3755a6abd30d803068627c4df25a6c46afbfe9a8cf"
+    },
+    {
+      "path": "backend/services/cashierQueue.js",
+      "sha256": "71497644e3b70f1d1abc68640dd703e0ebc32c9fc484fd49165541a35eae92c7"
+    },
+    {
+      "path": "backend/services/catalogService.js",
+      "sha256": "f2d5a3dee73c950eaae0914b156933423fdd416eca3e9b28fccd0f126a66d276"
+    },
+    {
+      "path": "backend/services/categoryService.js",
+      "sha256": "89dae583f60887896aeb4e857281ee1404179dc311f43ebca78c7c9754672626"
+    },
+    {
+      "path": "backend/services/guestOrders.js",
+      "sha256": "8055289cc45923e86afd96e7e429d850b34c808edb8f44d939ad77fe5020d8b4"
+    },
+    {
+      "path": "backend/services/inventoryService.js",
+      "sha256": "af4cb0ca86bf9cc7821257694291292d3a0b399e360150af1a424ecf5fcb2a73"
+    },
+    {
+      "path": "backend/services/productManagement.js",
+      "sha256": "3aff3ea8d656aae5ef6ac314b020435768aba7090e151487aa7b6c2759da7332"
+    },
+    {
+      "path": "backend/services/sizeInventory.js",
+      "sha256": "c259eafff5c55658b9e7bce9d925099cdf97a80cd4d11ee40c5196c127866afc"
+    },
+    {
+      "path": "backend/utils/accountCommitBoundary.js",
+      "sha256": "1ace3f19f530c1e822aa00484457dc90dda5e174bba1e8698df6f57fbca184bc"
+    },
+    {
+      "path": "backend/utils/accountIdentity.js",
+      "sha256": "e48da2222174c6e19eb4682588b87b7a5b53cb376642dc3cbf1bac3e2282ef45"
+    },
+    {
+      "path": "backend/utils/accountMutationOutcome.js",
+      "sha256": "3a9e00b4feb355462ef03cf828f361c5f1c37f7ba899b52b50f383ca32c3e499"
+    },
+    {
+      "path": "backend/utils/accountTransaction.js",
+      "sha256": "7d6612b3474f3e03da35b3708f9e160fa4e42a7ad78b75ce21f1414165441363"
+    },
+    {
+      "path": "backend/utils/adminAccountMutation.js",
+      "sha256": "bde1b65ea4b4fb899e744cb91e385f4da68017f088e65e99ee99e69ca91ac47b"
+    },
+    {
+      "path": "backend/utils/clothingSizes.js",
+      "sha256": "b3bf0c7253b1674bebf2720849dd710e9e660f23c7e01670f028bb393958d1da"
+    },
+    {
+      "path": "backend/utils/formatPerson.js",
+      "sha256": "778aa0959f1cdac7b4e5f3767d342bd6adf7e6df1bb13a03a30c90f617e309c5"
+    },
+    {
+      "path": "backend/utils/generateToken.js",
+      "sha256": "0f55ef2606719064f9333bf52c92d109a758c0ddd4e83ffef99e88b7ef442467"
+    },
+    {
+      "path": "backend/utils/invoiceDto.js",
+      "sha256": "947e189e2670babb77b39c904dffc5a11a8496f8e9c63c1201db12bbd42d80e9"
+    },
+    {
+      "path": "backend/utils/orderReference.js",
+      "sha256": "8520232e7c3ea7147b43ae8649e599d2a0cb9a41d920f4d254ba50ce51c28742"
+    },
+    {
+      "path": "backend/utils/passwords.js",
+      "sha256": "fe0cc85050dbe3e31792a85156e6e006bffe263436f19688f048b3813a8d2dd9"
+    },
+    {
+      "path": "backend/utils/personService.js",
+      "sha256": "d127479c3be3239b5e0ab74e01026c900d66b9a104fa318e2332a25d9ad4e1a2"
+    },
+    {
+      "path": "backend/utils/productPhoto.js",
+      "sha256": "aa0cd1eb646b2b735bda68ae259193f62b306485040ddb40777a17fecd2196be"
+    },
+    {
+      "path": "backend/utils/responseHelpers.js",
+      "sha256": "d56a867fcbab688dd2690844cdfb0adaeafd313ac13d1f207c64b247758a6ce0"
+    },
+    {
+      "path": "backend/utils/safeErrors.js",
+      "sha256": "425a09bd778f393061a5e78f78712de5d01257acdf8defb1103261c41fd7c491"
+    },
+    {
+      "path": "backend/utils/seedAdmin.js",
+      "sha256": "26118f76f7511eae8eea3b5372e44337d90ba0595a66a870b346417565c12bbc"
+    },
+    {
+      "path": "backend/utils/tokenPolicy.js",
+      "sha256": "a25da1ce6d8a524a5ce24fc212a7028bf049e96d6bd902874d1ad83ff6e751a1"
+    },
+    {
+      "path": "backend/utils/tokenVersion.js",
+      "sha256": "727c770d38771fa251dae02ad533298f6c1f615fd3f687bc15d30ef649dfa646"
+    }
+  ]
+}

@@ -29,26 +29,26 @@ export default function FinanceChart({ data, onClick }) {
           <Line
             type="monotone"
             dataKey="revenue"
-            stroke="#16a34a"
+            stroke="var(--color-primary)"
             name="Revenue"
           />
           <Line
             type="monotone"
             dataKey="expenses"
-            stroke="#dc2626"
+            stroke="var(--color-muted)"
             name="Expenses"
           />
           <Line
             type="monotone"
             dataKey="net"
-            stroke="#2563eb"
+            stroke="var(--color-accent)"
             name="Net Profit"
           />
           {/* 🔥 OPTIONAL: CASH FLOW */}
           <Line
             type="monotone"
             dataKey="cashIn"
-            stroke="#f59e0b"
+            stroke="var(--color-primary)"
             name="Cash In"
             strokeDasharray="4 4"
           />
@@ -56,14 +56,14 @@ export default function FinanceChart({ data, onClick }) {
           <Line
             type="monotone"
             dataKey="debtCreated"
-            stroke="#eab308"
+            stroke="var(--color-text)"
             name="Debt Created"
             strokeDasharray="2 2"
           />
           <Line
             type="monotone"
             dataKey="debtCollected"
-            stroke="#22c55e"
+            stroke="var(--color-muted)"
             name="Debt Collected"
             strokeDasharray="2 2"
           />

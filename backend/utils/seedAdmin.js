@@ -1,45 +1,20 @@
-import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
-import User from "../models/User.js"; // adjust path if needed
-import dotenv from "dotenv";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import User from "../models/User.js";
+import { validatePassword } from "./passwords.js";
 
-dotenv.config();
-
-// Connect to MongoDB
-const MONGO_URI = process.env.MONGO_URI;
-
-mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => {
-    console.error("MongoDB connection error:", err);
-    process.exit(1);
-  });
-
-async function seedAdmin() {
-  try {
-    const existingAdmin = await User.findOne({ identifier: "admin" });
-    if (existingAdmin) {
-      console.log("Admin user already exists:", existingAdmin.identifier);
-      process.exit(0);
-    }
-
-    const hashedPassword = await bcrypt.hash("admin123", 10); // change password as needed
-
-    const adminUser = new User({
-      identifier: "admin",
-      password: hashedPassword,
-      role: "admin",
-      confirmed: true,
-    });
-
-    await adminUser.save();
-    console.log("Admin user created successfully!");
-    process.exit(0);
-  } catch (err) {
-    console.error("Error seeding admin user:", err);
-    process.exit(1);
-  }
+export async function seedAdmin(password) {
+  validatePassword(password);
+  const existingAdmin = await User.findOne({ identifier: "admin" });
+  if (existingAdmin) return false;
+  throw new Error("Offline Administrator bootstrap requires a separately authorized recovery procedure");
 }
 
-seedAdmin();
+async function main() {
+  console.error("Offline Administrator bootstrap is disabled pending separately authorized recovery");
+  process.exitCode = 1;
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await main();
+}

@@ -1,6 +1,7 @@
 import { usePersonApi } from "../services/api";
 import { useState } from "react";
 import DebtForm from "../components/DebtForm";
+import { logClientError } from "../../../shared/utils/safeDiagnostics.js";
 
 export default function PersonCard({ person, refresh }) {
   const [showDebtForm, setShowDebtForm] = useState(false);
@@ -33,8 +34,6 @@ export default function PersonCard({ person, refresh }) {
         notes: data.notes,
       };
 
-      console.log("ADDING: ", payload, isPayment ? "PAYMENT" : "DEBT");
-
       if (isPayment) {
         await addPayment(person._id, payload);
       } else {
@@ -47,7 +46,7 @@ export default function PersonCard({ person, refresh }) {
 
       setShowDebtForm(false);
     } catch (err) {
-      console.error("ADD FAILED:", err);
+      logClientError("people.transaction_failed", err);
       alert("Failed to save transaction");
     } finally {
       setLoading(false);
@@ -60,7 +59,7 @@ export default function PersonCard({ person, refresh }) {
       await refresh();
       setShowEdit(false);
     } catch (err) {
-      console.error(err);
+      logClientError("people.update_failed", err);
       alert("Failed to update");
     }
   };
@@ -72,7 +71,7 @@ export default function PersonCard({ person, refresh }) {
       await deletePerson(person._id);
       await refresh();
     } catch (err) {
-      console.error(err);
+      logClientError("people.delete_failed", err);
       alert("Failed to delete");
     }
   };
@@ -122,7 +121,7 @@ export default function PersonCard({ person, refresh }) {
           <p
             className="text-lg font-bold"
             style={{
-              color: balance < 0 ? "#ef4444" : "rgba(34,197,94,0.9)",
+              color: balance < 0 ? "var(--color-danger)" : "var(--color-text)",
             }}
           >
             ₱ {balance}
@@ -304,7 +303,7 @@ export default function PersonCard({ person, refresh }) {
               <button
                 onClick={handleDelete}
                 className="flex-1 py-1.5 rounded text-sm text-white"
-                style={{ backgroundColor: "#ef4444" }}
+                style={{ backgroundColor: "var(--color-danger)" }}
               >
                 Delete
               </button>
