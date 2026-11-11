@@ -23,7 +23,12 @@ export function createApp({ bookstoreConfig } = {}) {
   app.disable("x-powered-by");
   app.use(logger);
   app.use(protectErrorResponses);
-  const allowedOrigins = ["http://localhost:5173", "http://localhost:5174", "https://serveflow.netlify.app"];
+  const fallbackOrigins = ["https://uphsd-pos.netlify.app", "http://localhost:5173", "http://localhost:5174", "https://serveflow.netlify.app"];
+  const configuredOrigins = (process.env.CORS_ALLOWED_ORIGINS || "")
+    .split(",")
+    .map(origin => origin.trim().replace(/\/+$/, ""))
+    .filter(Boolean);
+  const allowedOrigins = configuredOrigins.length ? configuredOrigins : fallbackOrigins;
   app.use(cors({
     origin(origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
